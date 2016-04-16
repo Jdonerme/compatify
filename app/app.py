@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, json
+from flask import Flask, render_template, request, redirect, url_for, json, session
 import spotipy
 import json
 import random, math
@@ -7,10 +7,9 @@ from spotipy import oauth2
 app = Flask(__name__)
 
 
+# Methods (Move to Algo)
 
-# Methods
-
-def generateRandomState(length): 
+def generateRandomString(length): 
     text = '';
     possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
@@ -20,6 +19,7 @@ def generateRandomState(length):
     return text
 
 
+app.secret_key = generateRandomString(16)
 
 
 
@@ -28,14 +28,15 @@ def generateRandomState(length):
 PORT_NUMBER = 8888
 SPOTIPY_CLIENT_ID = '883896384d0c4d158bab154c01de29db'
 SPOTIPY_CLIENT_SECRET = '37443ee0c0404c44b755f3ed97c48493'
-SPOTIPY_REDIRECT_URI = 'http://localhost:8888/callback'
-SCOPE = 'user-library-read playlist-modify-public'
+SPOTIPY_REDIRECT_URI1 = 'http://localhost:8888/callback1'
+SPOTIPY_REDIRECT_URI2 = 'http://localhost:8888/callback2'
+SCOPE = 'user-library-read playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private'
 CACHE = '.spotipyoauthcache'
-STATE = generateRandomState(16)
+STATE1 = generateRandomString(16)
+STATE2 = generateRandomString(16)
 
-sp_oauth = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIPY_REDIRECT_URI,state=STATE,scope=SCOPE,cache_path=CACHE,show_dialog=True)
-
-
+sp_oauth1 = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIPY_REDIRECT_URI1,state=STATE1,scope=SCOPE,cache_path=CACHE,show_dialog=True)
+sp_oauth2 = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIPY_REDIRECT_URI2,state=STATE2,scope=SCOPE,cache_path=CACHE,show_dialog=True)
 
 
 
@@ -45,33 +46,82 @@ sp_oauth = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIPY
 @app.route('/')
 @app.route('/index')
 def index():       
-    auth_url = sp_oauth.get_authorize_url()
-    return render_template("index.html", auth_url=auth_url)
+    auth_url1 = sp_oauth1.get_authorize_url()
+    return render_template("index.html", auth_url=auth_url1)
 
-@app.route('/callback')
-def callback():
+
+
+@app.route('/callback1')
+def callback1():
     code = request.args.get('code')
     state = request.args.get('state')
-    token = sp_oauth.get_access_token(code)
-    sp = spotipy.Spotify(auth=token)
-    tracks1 = sp.current_user_saved_tracks(limit=20, offset=0) 
 
-    string = "<p>state: " + state + "</p><p>code: " + code + "</p><p>token: " + json.dumps(token) + "</p>"
-    return string
+    if code and state == STATE1:
+        token = sp_oauth1.get_access_token(code)
+        access_token = token["access_token"]
+
+        sp1 = spotipy.Spotify(auth=access_token)
+
+        tracks1 = getAllTracks(sp1)
+        session["tracks1"] = tracks1
+
+        auth_url2 = sp_oauth2.get_authorize_url()
+        return render_template("index.html", auth_url=auth_url2)
+
+    else:
+        return redirect(url_for('index'))
+
+@app.route('/callback2')
+def callback2():
+    code = request.args.get('code')
+    state = request.args.get('state')
+
+    if code and state == STATE2:
+        token = sp_oauth2.get_access_token(code)
+        access_token = token["access_token"]
+
+        sp2 = spotipy.Spotify(auth=access_token)
+
+        tracks2 = getAllTracks(sp2)
+        #session["tracks2"] = tracks2
+
+        return render_template("songs.html", tracks1=session["tracks1"], tracks2=tracks2)
+
+    else:
+        return redirect(url_for('index'))
 
 
 
 
 
 
+# Methods
+
+def getAllTracks(sp):
+    tracks = []
+
+    SONGS_PER_TIME = 50
+    offset=0
+
+    while True:
+        SPTracks = sp.current_user_saved_tracks(limit=SONGS_PER_TIME, offset=offset) 
+
+        #if len(SPTracks["items"]) == 0:
+        if offset == 50:
+            break
+
+        for song in SPTracks["items"]:
+            track = song["track"]
+            song_item = { "name": track["name"], "uri": track["uri"], "artist": track["artists"][0]["name"], "album": track["album"]["name"] }
+            tracks.append(song_item)
+
+        offset += SONGS_PER_TIME
+
+    return tracks
 
 
 
 
-
-
-
-#return render_template("index.html")
 
 
 
