@@ -1,7 +1,10 @@
 <html>
 <head>
+  <meta http-equiv="refresh" content={{ "1;url=" + url_for("getsongs1")}} />
 	<title>Compatify</title>
+    <link rel="stylesheet" href="loading.css">
 	<link rel="stylesheet" href={{ url_for('static', filename='all_pages.css') }}>
+  <link href='http://fonts.googleapis.com/css?family=Merienda+One' rel='stylesheet' type='text/css'>
 </head>
 <body>
 <style type='text/css'> .uil-ball-css {
@@ -390,9 +393,8 @@ width: 100%;
 }
  </style>
 
-<img src="concert_background.png" class="bg">
+<img src={{ url_for('static', filename='concert_background.png') }} class="bg">
 <div class="overlay"></div>
 <div class="container">
     <p class="caption" style="font-size:30px" align="center">LOADING...</p>
-    <div class='uil-ball-css center' style='-webkit-transform:scale(0.6)'><div></div></div>
-    <p class="caption" align="center">&quot;Music is the universal language of mankind.&quot; &mdash; Henry Wadsworth Longfellow</p></div>
+    <div class='uil-ball-css center' style='-webkit-transform:scale(0.6)'><div></div></div></div>

@@ -45,62 +45,72 @@ def index():
 @app.route('/callback1')
 def callback1():
     global TOKEN1
-    global TRACK_SAVE
-    global SP1
-
     code = request.args.get('code')
     state = request.args.get('state')
 
     if code and state == STATE1:
         token = sp_oauth1.get_access_token(code)
-        access_token = token["access_token"]
-        TOKEN1 = access_token
-
-        sp1 = spotipy.Spotify(auth=access_token)
-        SP1 = sp1
-
-        tracks1 = getAllTracks(sp1)
-        #session["tracks1"] = tracks1
-        TRACK_SAVE = tracks1
-
-        auth_url2 = sp_oauth2.get_authorize_url()
-        return render_template("index.html", auth_url=auth_url2)
+        TOKEN1 = token
+        return render_template("loading1.html")
 
     else:
         return redirect(url_for('index'))
 
+@app.route('/getsongs1')
+def getsongs1():
+    global TRACK_SAVE
+    global SP1
+    token = TOKEN1
+    access_token = token["access_token"]
+
+    sp1 = spotipy.Spotify(auth=access_token)
+    SP1 = sp1
+
+    tracks1 = getAllTracks(sp1)
+    #session["tracks1"] = tracks1
+    TRACK_SAVE = tracks1
+
+    auth_url2 = sp_oauth2.get_authorize_url()
+    return render_template("index.html", auth_url=auth_url2)
+
+
 @app.route('/callback2')
 def callback2():
     global TOKEN2
-    global INTERSECTION
-    global SP2
 
     code = request.args.get('code')
     state = request.args.get('state')
 
     if code and state == STATE2:
         token = sp_oauth2.get_access_token(code)
-        access_token = token["access_token"]
-        TOKEN2 = access_token
-
-        sp2 = spotipy.Spotify(auth=access_token)
-        SP2 = sp2
-
-        tracks2 = getAllTracks(sp2)
-        #tracks1 = session["tracks1"]
-        tracks1 = TRACK_SAVE
-
-
-        score = algs.CompatabilityIndex(tracks1, tracks2)
-        top5artists = algs.TopNArtists(tracks1, tracks2, 5)
-
-        intersection_songs = algs.IntersectionPlaylist(tracks1, tracks2)
-        INTERSECTION = intersection_songs
-
-        return render_template("songs.html", score=score, topArtists=top5artists, success_page=url_for('success'))
+        TOKEN2 = token
+        return render_template("loading2.html")
 
     else:
-        return redirect(url_for('index'))
+        return "redirect(url_for('index'))"
+
+@app.route('/getsongs2')
+def getsongs2():
+    global TRACK_SAVE
+    global SP2
+    global INTERSECTION
+    token = TOKEN2
+    access_token = token["access_token"]
+
+    sp2 = spotipy.Spotify(auth=access_token)
+    SP2 = sp2
+
+    tracks2 = getAllTracks(sp2)
+    tracks1 = TRACK_SAVE
+
+
+    score = algs.CompatabilityIndex(tracks1, tracks2)
+    top5artists = algs.TopNArtists(tracks1, tracks2, 5)
+
+    intersection_songs = algs.IntersectionPlaylist(tracks1, tracks2)
+    INTERSECTION = intersection_songs
+
+    return render_template("songs.html", score=score, topArtists=top5artists, success_page=url_for('success'))
 
 @app.route('/success')
 def success():
