@@ -71,7 +71,7 @@ def getsongs1():
     TRACK_SAVE = tracks1
 
     auth_url2 = sp_oauth2.get_authorize_url()
-    return render_template("index.html", auth_url=auth_url2)
+    return render_template("second.html", auth_url=auth_url2)
 
 
 @app.route('/callback2')
@@ -105,12 +105,14 @@ def getsongs2():
 
 
     score = algs.CompatabilityIndex(tracks1, tracks2)
+
     top5artists = algs.TopNArtists(tracks1, tracks2, 5)
 
     intersection_songs = algs.IntersectionPlaylist(tracks1, tracks2)
+    intersection_size = len(intersection_songs)
     INTERSECTION = intersection_songs
 
-    return render_template("songs.html", score=score, topArtists=top5artists, success_page=url_for('success'))
+    return render_template("last.html", score=int(score), count=intersection_size, artists=top5artists, success_page=url_for('success'))
 
 @app.route('/success')
 def success():
@@ -132,7 +134,7 @@ def success():
             break
         else:
             break
-    return "Success!"
+    return render_template("success.html")
 
 
 # Methods
