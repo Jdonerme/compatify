@@ -4,7 +4,7 @@ on the team of Joonhee Lee, Catherine Ma, and Celia Zhang '''
 
 ''' Given a list of dictionaries representing songs, returns a list of the key values
  of the songs. '''
-def getInformation(a, key='uri'):
+def GetInformation(a, key='uri'):
     c = []
     for i in range(len(a)):
         c.append(a[i][key])
@@ -40,7 +40,7 @@ def Union(a, b, key = 'uri'):
     return c
 ''' a and b are lists of dictionaries that contain song information. returns c, 
  a list of dictionaries representing information of songs in a that aren't in  b. '''
-def Onlyinfirst(a, b, key = 'uri'):
+def OnlyInFirst(a, b, key = 'uri'):
     c = []
     my_dict = {'': False}
     for i in range(len(b)):
@@ -56,7 +56,7 @@ dictionary mapping how many instances of different a paramater were in common.
  common amongst songs in the intersection. Thus if 5 songs are in common between a
  and b and the key is albums, it will produce a count of how often different albums
  appear in that set of 5 songs.'''
-def inCommonCounts(a, b, key):
+def InCommonCounts(a, b, key):
     c = Union(a, b)
     artistcount = {}
     for i in range(len(c)):
@@ -82,7 +82,17 @@ def TopNOccurances(a, n):
             c.append((x[i], a[x[i]]))
     #print c
     return c
-            
+'''finds the compatability index. What percentage of songs in the smaller
+   sized playlist are in common. Rounds to two decimals '''
+def CompatabilityIndex(a, b):
+    c = Intersection(a, b, 'uri')
+    percentage = 100.0 * len(c) / min(len(a), len(b))
+    percentage = round(percentage, 2);
+    return percentage
+    
+    
+    
+    
 #Main function
 if __name__ == '__main__':
     dict1 = {'uri': 1, 'artist': 'Swift', 'album': '1985'}
@@ -92,13 +102,16 @@ if __name__ == '__main__':
     dict10 = {'uri': 10, 'artist': 'Swift', 'album' : 'red'}
     dict3 = {'uri': 3, 'artist': 'Kanye', 'album' : 'TLOP'}
     dict7 = {'uri': 7, 'artist': 'Swift', 'album' : 'red'}    
-    #Onlyinfirst([dict1, dict2, dict5, dict6, dict10], [dict2, dict3, dict10, dict7])
+    #print OnlyInFirst([dict1, dict2, dict5, dict6, dict10], [dict2, dict3, dict10, dict7])
     #print Union([dict1, dict2, dict5, dict6, dict10], [dict2, dict3, dict10, dict7])
     #print Intersection([dict1, dict2, dict5, dict6, dict10], [dict2, dict3, dict10, dict7])
-    #x = inCommonCounts([dict1, dict2, dict3, dict7, dict5, dict6, dict10], [dict1, dict2, dict3, dict5, dict6, dict10], 'album')
+    #x = InCommonCounts([dict1, dict2, dict3, dict7, dict5, dict6, dict10], [dict1, dict2, dict3, dict5, dict6, dict10], 'album')
     #print TopNOccurances(x, 40)
-    #x = inCommonCounts([dict1, dict2, dict3, dict7, dict5, dict6, dict10], [dict1, dict2, dict3, dict5, dict6, dict10], 'artist')
+    #x = InCommonCounts([dict1, dict2, dict3, dict7, dict5, dict6, dict10], [dict1, dict2, dict3, dict5, dict6, dict10], 'artist')
     #print TopNOccurances(x, 40)    
     
     #y = Union([dict1, dict2, dict5, dict6, dict10], [dict2, dict3, dict10, dict7])
-    #print getInformation(y)
+    #print GetInformation(y)
+    
+    #CompatabilityIndex([dict1, dict2, dict5, dict6, dict10], [dict3, dict10, dict7])
+    
