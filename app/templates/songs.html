@@ -8,6 +8,14 @@
 
 <body>
     <p>Compatify Score: {{score}}</p>  
+    <ol>
+        {% for artist in topArtists %}
+            <li> {{artist[0]}} {{artist[1]}}</li>
+        {% endfor %}
+
+        <a href={{success_page}}>Add Intersection</a>
+    </ol>
+
     
 </body>
 </html>
