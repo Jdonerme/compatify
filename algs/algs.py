@@ -4,10 +4,16 @@ def Swag(a, b):
   
     return c
 # Given a list of dictionaries representing songs, returns a list of their song IDs. 
-def getSongs(a):
+def getSongsIDs(a):
     c = []
     for i in range(len(a)):
         c.append(a[i]['id'])
+    return c
+# Given a list of dictionaries representing songs, returns a list of their song names
+def getSongsNames(a):
+    c = []
+    for i in range(len(a)):
+        c.append(a[i]['name'])
     return c
 # Given a list of dictionaries representings songs, returns a list of their artists. 
 def getArtists(a):
