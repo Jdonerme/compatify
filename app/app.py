@@ -1,25 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for, json, session
 import spotipy
-import json
-import random, math
 from spotipy import oauth2
+
+import algs
 
 app = Flask(__name__)
 
-
-# Methods (Move to Algo)
-
-def generateRandomString(length): 
-    text = '';
-    possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
-    for i in range(length):
-        text += possible[int(math.floor(random.random() * len(possible)))]
-
-    return text
-
-
-app.secret_key = generateRandomString(16)
+app.secret_key = algs.generateRandomString(16)
 
 
 
@@ -32,8 +19,8 @@ SPOTIPY_REDIRECT_URI1 = 'http://localhost:8888/callback1'
 SPOTIPY_REDIRECT_URI2 = 'http://localhost:8888/callback2'
 SCOPE = 'user-library-read playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private'
 CACHE = '.spotipyoauthcache'
-STATE1 = generateRandomString(16)
-STATE2 = generateRandomString(16)
+STATE1 = algs.generateRandomString(16)
+STATE2 = algs.generateRandomString(16)
 
 sp_oauth1 = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIPY_REDIRECT_URI1,state=STATE1,scope=SCOPE,cache_path=CACHE,show_dialog=True)
 sp_oauth2 = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIPY_REDIRECT_URI2,state=STATE2,scope=SCOPE,cache_path=CACHE,show_dialog=True)

@@ -1,3 +1,5 @@
+import random, math
+
 ''' Logic for compatify. 5c spring hackathon. 4 /16/2016. coded by Joe Donermeyer
 on the team of Joonhee Lee, Catherine Ma, and Celia Zhang '''
 
@@ -70,7 +72,7 @@ def InCommonCounts(a, b, key):
 '''Given a dictionary, a, mapping instances of an key to number of occurances, 
 returns a sorted list of the keys corresponding to the top n occurances. 
  returns as a tuple (key, occurances) '''
-def TopNOccurances(a, n):
+def TopNOccurrences(a, n):
     c = []
     x = sorted(a, key=a.get, reverse=True)
     
@@ -89,6 +91,16 @@ def CompatabilityIndex(a, b):
     percentage = 100.0 * len(c) / min(len(a), len(b))
     percentage = round(percentage, 2);
     return percentage
+
+def generateRandomString(length): 
+    text = '';
+    possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+    for i in range(length):
+        text += possible[int(math.floor(random.random() * len(possible)))]
+
+    return text
+
     
     
     
@@ -106,9 +118,9 @@ if __name__ == '__main__':
     #print Union([dict1, dict2, dict5, dict6, dict10], [dict2, dict3, dict10, dict7])
     #print Intersection([dict1, dict2, dict5, dict6, dict10], [dict2, dict3, dict10, dict7])
     #x = InCommonCounts([dict1, dict2, dict3, dict7, dict5, dict6, dict10], [dict1, dict2, dict3, dict5, dict6, dict10], 'album')
-    #print TopNOccurances(x, 40)
+    #print TopNOccurrences(x, 40)
     #x = InCommonCounts([dict1, dict2, dict3, dict7, dict5, dict6, dict10], [dict1, dict2, dict3, dict5, dict6, dict10], 'artist')
-    #print TopNOccurances(x, 40)    
+    #print TopNOccurrences(x, 40)    
     
     #y = Union([dict1, dict2, dict5, dict6, dict10], [dict2, dict3, dict10, dict7])
     #print GetInformation(y)
