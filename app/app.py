@@ -38,7 +38,7 @@ SP2 = None
 @app.route('/index')
 def index():       
     auth_url1 = sp_oauth1.get_authorize_url()
-    return render_template("index.html", auth_url=auth_url1)
+    return render_template("first.html", auth_url=auth_url1)
 
 
 
