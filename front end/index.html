@@ -1,207 +1,94 @@
 <!DOCTYPE html>
 <html>
-    
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>GETTING STARTED WITH BRACKETS</title>
-        <meta name="description" content="An interactive getting started guide for Brackets.">
-        <link rel="stylesheet" href="main.css">
-    </head>
-    <body>
-        
-        <h1>GETTING STARTED WITH BRACKETS</h1>
-        <h2>This is your guide!</h2>
-        
-        <!--
-            MADE WITH <3 AND JAVASCRIPT
-        -->
-        
-        <p>
-            Welcome to Brackets, a modern open-source code editor that understands web design. It's a lightweight,
-            yet powerful, code editor that blends visual tools into the editor so you get the right amount of help
-            when you want it.
-        </p>
-        
-        <!--
-            WHAT IS BRACKETS?
-        -->
-        <p>
-            <em>Brackets is a different type of editor.</em>
-            Brackets has some unique features like Quick Edit, Live Preview and others that you may not find in other
-            editors. And Brackets is written in JavaScript, HTML and CSS. That means that most of you using Brackets
-            have the skills necessary to modify and extend the editor. In fact, we use Brackets every day to build
-            Brackets. To learn more about how to use the key features, read on.
-        </p>
-        
-        <!--
-            GET STARTED WITH YOUR OWN FILES
-        -->
-        
-        <h3>Projects in Brackets</h3>
-        <p>
-            In order to edit your own code using Brackets, you can just open the folder containing your files.
-            Brackets treats the currently open folder as a "project"; features like Code Hints, Live Preview and
-            Quick Edit only use files within the currently open folder.
-        </p>
-        
-        <samp>
-            Once you're ready to get out of this sample project and edit your own code, you can use the dropdown
-            in the left sidebar to switch folders. Right now, the dropdown says "Getting Started" - that's the
-            folder containing the file you're looking at right now. Click on the dropdown and choose "Open Folder…"
-            to open your own folder.
-            You can also use the dropdown later to switch back to folders you've opened previously, including this
-            sample project.
-        </samp>
-        
-        <!--
-            THE RELATIONSHIP BETWEEN HTML, CSS AND JAVASCRIPT
-        -->
-        <h3>Quick Edit for CSS and JavaScript</h3>
-        <p>
-            No more switching between documents and losing your context. When editing HTML, use the
-            <kbd>Cmd/Ctrl + E</kbd> shortcut to open a quick inline editor that displays all the related CSS.
-            Make a tweak to your CSS, hit <kbd>ESC</kbd> and you're back to editing HTML, or just leave the
-            CSS rules open and they'll become part of your HTML editor. If you hit <kbd>ESC</kbd> outside of
-            a quick inline editor, they'll all collapse. Quick Edit will also find rules defined in LESS and
-            SCSS files, including nested rules.
-        </p>
-        
-        <samp>
-            Want to see it in action? Place your cursor on the <!-- <samp> --> tag above and press
-            <kbd>Cmd/Ctrl + E</kbd>. You should see a CSS quick editor appear above, showing the CSS rule that
-            applies to it. Quick Edit works in class and id attributes as well. You can use it with your
-            LESS and SCSS files also.
-            
-            You can create new rules the same way. Click in one of the <!-- <p> --> tags above and press
-            <kbd>Cmd/Ctrl + E</kbd>. There are no rules for it right now, but you can click the New Rule
-            button to add a new rule for <!-- <p> -->.
-        </samp>
-        
-        <a href="screenshots/quick-edit.png">
-            <img alt="A screenshot showing CSS Quick Edit" src="screenshots/quick-edit.png" />
-        </a>
-        
-        <p>
-            You can use the same shortcut to edit other things as well - like functions in JavaScript,
-            colors, and animation timing functions - and we're adding more and more all the time.
-        </p>
-        <p>
-            For now inline editors cannot be nested, so you can only use Quick Edit while the cursor
-            is in a "full size" editor.
-        </p>
-        
-        <!--
-            LIVE PREVIEW
-        -->
-        <h3>Preview HTML and CSS changes live in the browser</h3>
-        <p>
-            You know that "save/reload dance" we've been doing for years? The one where you make changes in
-            your editor, hit save, switch to the browser and then refresh to finally see the result?
-            With Brackets, you don't have to do that dance.
-        </p>
-        <p>
-            Brackets will open a <em>live connection</em> to your local browser and push HTML and CSS updates as you
-            type! You might already be doing something like this today with browser-based tools, but with Brackets
-            there is no need to copy and paste the final code back into the editor. Your code runs in the
-            browser, but lives in your editor!
-        </p>
-        
-        <h3>Live Highlight HTML elements and CSS rules</h3>
-        <p>
-            Brackets makes it easy to see how your changes in HTML and CSS will affect the page. When your cursor
-            is on a CSS rule, Brackets will highlight all affected elements in the browser. Similarly, when editing
-            an HTML file, Brackets will highlight the corresponding HTML elements in the browser.
-        </p>
-        
-        <samp>
-            If you have Google Chrome installed, you can try this out yourself. Click on the lightning bolt
-            icon in the top right corner of your Brackets window or hit <kbd>Cmd/Ctrl + Alt + P</kbd>. When
-            Live Preview is enabled on an HTML document, all linked CSS documents can be edited in real-time.
-            The icon will change from gray to gold when Brackets establishes a connection to your browser.
-            
-            Now, place your cursor on the <!-- <img> --> tag above. Notice the blue highlight that appears
-            around the image in Chrome. Next, use <kbd>Cmd/Ctrl + E</kbd> to open up the defined CSS rules.
-            Try changing the size of the border from 10px to 20px or change the background
-            color from "transparent" to "hotpink". If you have Brackets and your browser running side-by-side, you
-            will see your changes instantly reflected in your browser. Cool, right?
-        </samp>
-        
-        <p class="note">
-            Today, Brackets only supports Live Preview for HTML and CSS. However, in the current version, changes to
-            JavaScript files are automatically reloaded when you save. We are currently working on Live Preview
-            support for JavaScript. Live previews are also only possible with Google Chrome, but we hope
-            to bring this functionality to all major browsers in the future.
-        </p>
-        
-        <h3>Quick View</h3>
-        <p>
-            For those of us who haven't yet memorized the color equivalents for HEX or RGB values, Brackets makes
-            it quick and easy to see exactly what color is being used. In either CSS or HTML, simply hover over any
-            color value or gradient and Brackets will display a preview of that color/gradient automatically. The
-            same goes for images: simply hover over the image link in the Brackets editor and it will display a
-            thumbnail preview of that image.
-        </p>
-        
-        <samp>
-            To try out Quick View for yourself, place your cursor on the <!-- <body> --> tag at the top of this
-            document and press <kbd>Cmd/Ctrl + E</kbd> to open a CSS quick editor. Now simply hover over any of the
-            color values within the CSS. You can also see it in action on gradients by opening a CSS quick editor
-            on the <!-- <html> --> tag and hovering over any of the background image values. To try out the image
-            preview, place your cursor over the screenshot image included earlier in this document.
-        </samp>
-        
-        <h3>Need something else? Try an extension!</h3>
-        <p>
-            In addition to all the goodness that's built into Brackets, our large and growing community of
-            extension developers has built hundreds of extensions that add useful functionality. If there's
-            something you need that Brackets doesn't offer, more than likely someone has built an extension for
-            it. To browse or search the list of available extensions, choose <strong>File > Extension
-            Manager…</strong> and click on the "Available" tab. When you find an extension you want, just click
-            the "Install" button next to it.
-        </p>
-        
-        <!--
-            LET US KNOW WHAT YOU THINK
-        -->
-        <h2>Get involved</h2>
-        <p>
-            Brackets is an open-source project. Web developers from around the world are contributing to build
-            a better code editor. Many more are building extensions that expand the capabilities of Brackets.
-            Let us know what you think, share your ideas or contribute directly to the project.
-        </p>
-        <ul>
-            <li><a href="http://brackets.io">Brackets.io</a></li>
-            <li><a href="http://blog.brackets.io">Brackets Team Blog</a></li>
-            <li><a href="https://github.com/adobe/brackets">Brackets on GitHub</a></li>
-            <li><a href="https://brackets-registry.aboutweb.com">Brackets Extension Registry</a></li>
-            <li><a href="https://github.com/adobe/brackets/wiki">Brackets Wiki</a></li>
-            <li><a href="https://groups.google.com/forum/#!forum/brackets-dev">Brackets Developer Mailing List</a></li>
-            <li><a href="https://twitter.com/brackets">@brackets on Twitter</a></li>
-            <li>Chat with Brackets developers on IRC in <a href="http://webchat.freenode.net/?channels=brackets&uio=d4">#brackets on Freenode</a></li>
-        </ul>
-        
-    </body>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="http://d3js.org/d3.v3.min.js" language="JavaScript"></script>
+    <script src="liquidFillGauge.js" language="JavaScript"></script>
+    <style>
+        .liquidFillGaugeText { font-family: Helvetica; font-weight: bold; }
+    </style>
+</head>
+<body>
+<svg id="fillgauge1" width="97%" height="250" onclick="gauge1.update(NewValue());"></svg>
+<svg id="fillgauge2" width="19%" height="200" onclick="gauge2.update(NewValue());"></svg>
+<svg id="fillgauge3" width="19%" height="200" onclick="gauge3.update(NewValue());"></svg>
+<svg id="fillgauge4" width="19%" height="200" onclick="gauge4.update(NewValue());"></svg>
+<svg id="fillgauge5" width="19%" height="200" onclick="gauge5.update(NewValue());"></svg>
+<svg id="fillgauge6" width="19%" height="200" onclick="gauge6.update(NewValue());"></svg>
+<script language="JavaScript">
+    var gauge1 = loadLiquidFillGauge("fillgauge1", 55);
+    var config1 = liquidFillGaugeDefaultSettings();
+    config1.circleColor = "#FF7777";
+    config1.textColor = "#FF4444";
+    config1.waveTextColor = "#FFAAAA";
+    config1.waveColor = "#FFDDDD";
+    config1.circleThickness = 0.2;
+    config1.textVertPosition = 0.2;
+    config1.waveAnimateTime = 1000;
+    var gauge2= loadLiquidFillGauge("fillgauge2", 28, config1);
+    var config2 = liquidFillGaugeDefaultSettings();
+    config2.circleColor = "#D4AB6A";
+    config2.textColor = "#553300";
+    config2.waveTextColor = "#805615";
+    config2.waveColor = "#AA7D39";
+    config2.circleThickness = 0.1;
+    config2.circleFillGap = 0.2;
+    config2.textVertPosition = 0.8;
+    config2.waveAnimateTime = 2000;
+    config2.waveHeight = 0.3;
+    config2.waveCount = 1;
+    var gauge3 = loadLiquidFillGauge("fillgauge3", 60.1, config2);
+    var config3 = liquidFillGaugeDefaultSettings();
+    config3.textVertPosition = 0.8;
+    config3.waveAnimateTime = 5000;
+    config3.waveHeight = 0.15;
+    config3.waveAnimate = false;
+    config3.waveOffset = 0.25;
+    config3.valueCountUp = false;
+    config3.displayPercent = false;
+    var gauge4 = loadLiquidFillGauge("fillgauge4", 50, config3);
+    var config4 = liquidFillGaugeDefaultSettings();
+    config4.circleThickness = 0.15;
+    config4.circleColor = "#808015";
+    config4.textColor = "#555500";
+    config4.waveTextColor = "#FFFFAA";
+    config4.waveColor = "#AAAA39";
+    config4.textVertPosition = 0.8;
+    config4.waveAnimateTime = 1000;
+    config4.waveHeight = 0.05;
+    config4.waveAnimate = true;
+    config4.waveRise = false;
+    config4.waveHeightScaling = false;
+    config4.waveOffset = 0.25;
+    config4.textSize = 0.75;
+    config4.waveCount = 3;
+    var gauge5 = loadLiquidFillGauge("fillgauge5", 60.44, config4);
+    var config5 = liquidFillGaugeDefaultSettings();
+    config5.circleThickness = 0.4;
+    config5.circleColor = "#6DA398";
+    config5.textColor = "#0E5144";
+    config5.waveTextColor = "#6DA398";
+    config5.waveColor = "#246D5F";
+    config5.textVertPosition = 0.52;
+    config5.waveAnimateTime = 5000;
+    config5.waveHeight = 0;
+    config5.waveAnimate = false;
+    config5.waveCount = 2;
+    config5.waveOffset = 0.25;
+    config5.textSize = 1.2;
+    config5.minValue = 30;
+    config5.maxValue = 150
+    config5.displayPercent = false;
+    var gauge6 = loadLiquidFillGauge("fillgauge6", 120, config5);
+
+    function NewValue(){
+        if(Math.random() > .5){
+            return Math.round(Math.random()*100);
+        } else {
+            return (Math.random()*100).toFixed(1);
+        }
+    }
+</script>
+</body>
 </html>
-<!--
-
-    [[[[[[[[[[[[[[[      ]]]]]]]]]]]]]]]
-    [::::::::::::::      ::::::::::::::]
-    [::::::::::::::      ::::::::::::::]
-    [::::::[[[[[[[:      :]]]]]]]::::::]
-    [:::::[                      ]:::::]
-    [:::::[                      ]:::::]
-    [:::::[                      ]:::::]
-    [:::::[                      ]:::::]
-    [:::::[     CODE THE WEB     ]:::::]
-    [:::::[  http://brackets.io  ]:::::]
-    [:::::[                      ]:::::]
-    [:::::[                      ]:::::]
-    [:::::[                      ]:::::]
-    [:::::[                      ]:::::]
-    [::::::[[[[[[[:      :]]]]]]]::::::]
-    [::::::::::::::      ::::::::::::::]
-    [::::::::::::::      ::::::::::::::]
-    [[[[[[[[[[[[[[[      ]]]]]]]]]]]]]]]
-
--->
