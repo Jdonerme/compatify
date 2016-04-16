@@ -1,7 +1,7 @@
 import random, math
 
 ''' Logic for compatify. 5c spring hackathon. 4 /16/2016. coded by Joe Donermeyer
-on the team of Joonhee Lee, Catherine Ma, and Celia Zhang '''
+on the team of Joon Hee Lee, Catherine Ma, and Celia Zhang '''
 
 
 ''' Given a list of dictionaries representing songs, returns a list of the key values
@@ -92,6 +92,8 @@ def CompatabilityIndex(a, b):
     percentage = round(percentage, 2);
     return percentage
 
+
+'''generate a random string of size length'''
 def generateRandomString(length): 
     text = '';
     possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';

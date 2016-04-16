@@ -25,7 +25,7 @@ STATE2 = algs.generateRandomString(16)
 sp_oauth1 = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIPY_REDIRECT_URI1,state=STATE1,scope=SCOPE,cache_path=CACHE,show_dialog=True)
 sp_oauth2 = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIPY_REDIRECT_URI2,state=STATE2,scope=SCOPE,cache_path=CACHE,show_dialog=True)
 
-
+TRACK_SAVE = None
 
 
 # VIEWS
@@ -40,6 +40,8 @@ def index():
 
 @app.route('/callback1')
 def callback1():
+    global TRACK_SAVE
+
     code = request.args.get('code')
     state = request.args.get('state')
 
@@ -50,7 +52,8 @@ def callback1():
         sp1 = spotipy.Spotify(auth=access_token)
 
         tracks1 = getAllTracks(sp1)
-        session["tracks1"] = tracks1
+        #session["tracks1"] = tracks1
+        TRACK_SAVE = tracks1
 
         auth_url2 = sp_oauth2.get_authorize_url()
         return render_template("index.html", auth_url=auth_url2)
@@ -60,6 +63,7 @@ def callback1():
 
 @app.route('/callback2')
 def callback2():
+
     code = request.args.get('code')
     state = request.args.get('state')
 
@@ -70,9 +74,13 @@ def callback2():
         sp2 = spotipy.Spotify(auth=access_token)
 
         tracks2 = getAllTracks(sp2)
-        #session["tracks2"] = tracks2
+        #tracks1 = session["tracks1"]
+        tracks1 = TRACK_SAVE
 
-        return render_template("songs.html", tracks1=session["tracks1"], tracks2=tracks2)
+        score = algs.CompatabilityIndex(tracks1, tracks2)
+
+
+        return render_template("songs.html", score=score)
 
     else:
         return redirect(url_for('index'))
@@ -93,8 +101,8 @@ def getAllTracks(sp):
     while True:
         SPTracks = sp.current_user_saved_tracks(limit=SONGS_PER_TIME, offset=offset) 
 
-        #if len(SPTracks["items"]) == 0:
-        if offset == 50:
+        if len(SPTracks["items"]) == 0:
+        #if offset >= 50:
             break
 
         for song in SPTracks["items"]:
