@@ -1,0 +1,64 @@
+<html>
+<head>
+	<title>Conway's Game of Life</title>
+	<style>
+		body{
+			width:960px;
+			margin:0 auto;
+			}
+		rect{
+			stroke:rgba(204, 204,204,0.2);
+			shape-rendering:crispEdges;
+		}
+		.edit:hover{
+			stroke:steelblue;
+			cursor:pointer;
+		}
+		select{
+			width:80px;
+		}
+		
+	</style>
+</head>
+<body><section style="display:block;">
+<button type="button" onClick="startUniv()" id='startBtn'>Start</button>
+</section>
+<svg width='796' height='448'></svg>
+
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="goL.js"></script>
+<script src="goL games.js"></script>
+
+<script>
+function newUniv(){
+	goL.setGrid();
+	goL.editMode(true);
+	d3.select("#startBtn").html("Start");
+}
+
+function startUniv(){
+	if(d3.select("#startBtn").html()=="Start"){
+		d3.select("#startBtn").html("Pause");
+		goL.editMode(false);
+		goL.update();
+	}else{
+		d3.select("#startBtn").html("Start");
+		goL.editMode(true);
+		goL.clearTimeout();
+	}
+}
+
+function changeUniv(t){
+	goL.setGrid(games[t.options[t.selectedIndex].value]);
+	d3.select("#startBtn").html("Start");
+	goL.editMode(true);
+}
+
+d3.select("select").selectAll("option").data(d3.keys(games))
+    .enter().append("option").attr("value",function(d){ return d;})
+    .text(function(d){return d;});
+
+goL.setGrid(games.Planes);
+startUniv();
+
+</script>
