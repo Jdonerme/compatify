@@ -1,14 +1,21 @@
-<style>
-    body {
-        background-color: #433045;
-    }
-    .title {
-        font-family: 'Lato', sans-serif;
-        color: white;
-        font-size: '20px';
-    }
-    #caption {
-        font-family: 'Open Sans', sans-serif;
-        font-size: '10px';
-    }
-</style>
+body {
+    background-repeat: no-repeat;
+    background-color: rgba(99, 99, 99, 0.5);
+}
+.title {
+    font-family: "Merienda One", sans-serif;
+    color: white;
+    font-size: 100px;
+}
+.caption {
+    font-family: "Lato", sans-serif;
+    font-size: 20px;
+}
+
+.bg {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width:100%;
+    height:100%;
+}
