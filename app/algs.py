@@ -59,7 +59,7 @@ dictionary mapping how many instances of different a paramater were in common.
  and b and the key is albums, it will produce a count of how often different albums
  appear in that set of 5 songs.'''
 def InCommonCounts(a, b, key):
-    c = Union(a, b)
+    c = Intersection(a, b)
     artistcount = {}
     for i in range(len(c)):
         if (not artistcount.get(c[i][key])):
@@ -103,9 +103,26 @@ def generateRandomString(length):
 
     return text
 
-    
-    
-    
+'''return list of song ids for the intersection playlist of a, b'''
+def IntersectionPlaylist(a, b):
+    c = Intersection(a, b)
+    playlist = GetInformation(c)
+    print playlist
+    return playlist
+'''return list of song ids in a but not in b'''
+def ExclusivePlaylist(a, b):
+    c = OnlyInFirst(a, b)
+    playlist = GetInformation(c)
+    print playlist
+    return playlist
+'''returns a list of the top n artists of songs that were shared. 
+   Each list element is a tuple of the artist name and how many 
+   occurances there where'''
+def TopNArtists(a, b, n):
+    c = InCommonCounts(a, b, 'artist')
+    topn = TopNOccurrences(c, n)
+    print topn
+    return topn
     
 #Main function
 if __name__ == '__main__':
@@ -127,5 +144,5 @@ if __name__ == '__main__':
     #y = Union([dict1, dict2, dict5, dict6, dict10], [dict2, dict3, dict10, dict7])
     #print GetInformation(y)
     
-    #CompatabilityIndex([dict1, dict2, dict5, dict6, dict10], [dict3, dict10, dict7])
+    #Intersection([dict1, dict2, dict5, dict6, dict10], [dict1, dict2, dict3, dict10, dict7])
     
