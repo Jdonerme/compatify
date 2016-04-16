@@ -10,6 +10,7 @@
 }
 .caption {
     font-size: 25px;
-    margin-top: 2%;
-    margin-bottom: 10%;
+}
+.artist {
+    color: white;
 }
