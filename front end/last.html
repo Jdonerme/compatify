@@ -6,6 +6,7 @@
         
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
         <link href='http://fonts.googleapis.com/css?family=Merienda+One' rel='stylesheet' type='text/css'>
+        <link href='https://fonts.googleapis.com/css?family=Lato' rel='stylesheet' type='text/css'>
         
         <script src="http://d3js.org/d3.v3.min.js" language="JavaScript"></script>
         <script src="liquidFillGauge.js" language="JavaScript"></script>
@@ -17,21 +18,29 @@
     <body>
         <img src="concert_background_blurred.png" class="bg">
         <div class="overlay"></div>
-        <p class="title text-center">Compatify Results</p>
+        <p class="title text-center">Compatibility</p>
         
-        <svg id="fillgauge1" width="97%" height="250"></svg>
-        <script language="JavaScript">
-        var compatPercent = 55;
-        var config1 = liquidFillGaugeDefaultSettings();
-        config1.circleColor = "#000099";
-        config1.textColor = "#000099";
-        config1.waveTextColor = "#FFAAAA";
-        config1.waveColor = "#FFDDDD";
-        config1.circleThickness = 0.1;
-        config1.textVertPosition = 0.5;
-        config1.waveAnimateTime = 1000;
-        var gauge1 = loadLiquidFillGauge("fillgauge1", compatPercent, config1);
-        </script>
+        <div class="row">
+            <svg id="songCompat" width="100%" height="250"></svg>
+
+            <script language="JavaScript">
+            var compatPercent = 55;
+            var config1 = liquidFillGaugeDefaultSettings();
+            config1.circleColor = "#000099";
+            config1.textColor = "#000099";
+            config1.waveTextColor = "#FFAAAA";
+            config1.waveColor = "#FFDDDD";
+            config1.circleThickness = 0.1;
+            config1.textVertPosition = 0.5;
+            config1.waveAnimateTime = 1000;
+            var gauge1 = loadLiquidFillGauge("songCompat", compatPercent, config1);
+            </script>
+            <p class="caption text-center">Songs matched</p> 
+        </div>
+        
+        <div class="row">
+        
+        </div>
 
         <button class="btn btn-primary btn-lg center-block">Restart</button>
 
