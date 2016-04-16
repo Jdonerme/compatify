@@ -63,7 +63,8 @@ def SongsOnlyinfirst(a, b):
     #print c
     return c
 #a and b are lists of dictionaries that contain song information. Returns c, a
-#dictionary mapping how many instances of different artists were in common.
+#dictionary mapping how many instances of different a paramater were in common.
+# key is the paramater we're interested in
 def inCommonCounts(a, b, key):
     c = SongsinCommon(a, b)
     artistcount = {}
