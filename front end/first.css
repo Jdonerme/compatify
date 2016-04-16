@@ -1,10 +1,6 @@
-body {
-    background-repeat: no-repeat;
-    background-color: rgba(99, 99, 99, 0.5);
-}
 .title {
     font-family: "Merienda One", sans-serif;
-    color: white;
+    color: rgba(99, 99, 99, 0.5);
     font-size: 100px;
 }
 .caption {
@@ -18,4 +14,5 @@ body {
     left: 0px;
     width:100%;
     height:100%;
+    z-index: -1;
 }
