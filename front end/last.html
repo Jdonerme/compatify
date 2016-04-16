@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>Data page for Compatify</title>
+        <title>Comparify Results</title>
         
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
         <link href='http://fonts.googleapis.com/css?family=Merienda+One' rel='stylesheet' type='text/css'>
@@ -21,10 +21,12 @@
         <p class="title text-center">Compatibility</p>
         
         <div class="row">
-            <svg id="songCompat" width="100%" height="250"></svg>
-
+            <svg id="songCompat" width="100%" height="250" align="center"></svg>
             <script language="JavaScript">
+            
             var compatPercent = 55;
+            var songsMatched = 87 + " songs matched";
+                
             var config1 = liquidFillGaugeDefaultSettings();
             config1.circleColor = "#000099";
             config1.textColor = "#000099";
@@ -34,14 +36,37 @@
             config1.textVertPosition = 0.5;
             config1.waveAnimateTime = 1000;
             var gauge1 = loadLiquidFillGauge("songCompat", compatPercent, config1);
+            </script> 
+            
+            <p id="songsMatchedReport" class="caption text-center"></p> 
+            <script>
+                document.getElementById("songsMatchedReport").innerHTML = songsMatched;
             </script>
-            <p class="caption text-center">Songs matched</p> 
         </div>
         
-        <div class="row">
+        <script>
+            var topArtists = ["Joe", "Cathy", "Joon", "Celia", "Advith"]
+        </script>
         
+        <h2 class="caption text-center">Top Five Shared Artists (Songs in Common)</h2>
+        <div class="artistsDiv">
+            <p class="artist text-center" id="artist1">None</p>
+            <p class="artist text-center" id="artist2">None</p>
+            <p class="artist text-center" id="artist3">None</p>
+            <p class="artist text-center" id="artist4">None</p>
+            <p class="artist text-center" id="artist5">None</p>
         </div>
 
+        <script>
+            
+        </script>
+        
+        <br><br>
+            
+        <button class="btn btn-primary btn-lg center-block">Make Playlist of Shared Songs </button>
+        
+        <br><br>
+        
         <button class="btn btn-primary btn-lg center-block">Restart</button>
 
     </body>    
