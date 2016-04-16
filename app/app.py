@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, json, session
 import spotipy
 from spotipy import oauth2
+import os
 
 import algs
 
@@ -10,7 +11,7 @@ app.secret_key = algs.generateRandomString(16)
 
 # GLOBAL VARIABLES
 
-PORT_NUMBER = 8888
+PORT_NUMBER = int(os.environ.get('PORT', 33507))
 SPOTIPY_CLIENT_ID = '883896384d0c4d158bab154c01de29db'
 SPOTIPY_CLIENT_SECRET = '37443ee0c0404c44b755f3ed97c48493'
 SPOTIPY_REDIRECT_URI1 = 'http://localhost:8888/callback1'
