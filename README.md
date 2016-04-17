@@ -1,6 +1,8 @@
 Compatify
 ========
 
+![Screenshot](/home.jpg "Home Screen")
+
 *Test your music compatibility with your friends and significant others!*
 
 Live Website: https://compatify.herokuapp.com/
