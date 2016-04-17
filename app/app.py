@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, redirect, url_for, session
-import json
 import spotipy
 from spotipy import oauth2
 import os
@@ -35,14 +34,7 @@ sp_oauth1 = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIP
 sp_oauth2 = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIPY_REDIRECT_URI2,state=STATE2,scope=SCOPE,cache_path=CACHE,show_dialog=True)
 
 
-# NEED TO REMOVE
-TRACK_SAVE = None
-TOKEN1 = None
-TOKEN2 = None
-INTERSECTION = None
-
-SP1 = None
-SP2 = None
+INTERSECTION_DICT = {}
 
 
 # VIEWS
@@ -104,7 +96,7 @@ def getsongs2():
     intersection_songs = algs.IntersectionPlaylist(tracks1, tracks2)
     intersection_size = len(intersection_songs)
 
-    session["INTERSECTION"] = json.dumps(intersection_songs)
+    INTERSECTION_DICT[access_token1 + "_" + access_token2] = intersection_songs
 
     return render_template("last.html", score=int(score), count=intersection_size, artists=top5artists, success_page=url_for('success'))
 
@@ -114,15 +106,17 @@ def success():
     token2 = session["TOKEN2"]
     access_token1 = token1["access_token"]
     access_token2 = token2["access_token"]
+    session.clear()
+
+    intersection_songs = INTERSECTION_DICT[access_token1 + "_" + access_token2]
+    del INTERSECTION_DICT[access_token1 + "_" + access_token2]
+
 
     sp1 = spotipy.Spotify(auth=access_token1)
     sp2 = spotipy.Spotify(auth=access_token2)
 
     user_id1 = sp1.me()["id"]
     user_id2 = sp2.me()["id"]
-
-    intersection_songs = json.loads(session["INTERSECTION"])
-    session.clear()
 
     playlist_name = 'Compatify-' + user_id1 + '-' + user_id2
 
@@ -170,18 +164,6 @@ def getAllTracks(sp):
         offset += SONGS_PER_TIME
 
     return tracks
-'''
-def createIntersection(sp):
-    sp.user
-
-
-
-'''
-
-
-
-
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=PORT_NUMBER, debug=True)
