@@ -110,9 +110,6 @@ def getsongs2():
 
 @app.route('/success')
 def success():
-    print "\n\n\n\n\n\n\n\n\n\n"
-    print session
-    print "\n\n\n\n\n\n\n\n\n\n"
     token1 = session["TOKEN1"]
     token2 = session["TOKEN2"]
     access_token1 = token1["access_token"]
