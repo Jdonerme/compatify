@@ -27,4 +27,6 @@ Roles
 
 Frontend & Design: Catherine Ma, Celia Zhang
 
-Backend & API Integration: Joon Hee Lee, Joseph Donermeyer
+Backend & Spotify API: Joon Hee Lee
+
+Logic & Algorithms: Joseph Donermeyer
