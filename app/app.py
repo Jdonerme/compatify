@@ -3,6 +3,7 @@ import spotipy
 from spotipy import oauth2
 import os
 import algs
+from Song import Song
 
 app = Flask(__name__)
 
@@ -89,14 +90,18 @@ def getsongs2():
     tracks1 = getAllTracks(sp1)
     tracks2 = getAllTracks(sp2)
 
-    score = algs.CompatabilityIndex(tracks1, tracks2)
+    intersection_songs = algs.intersection(tracks1, tracks2)
 
-    top5artists = algs.TopNArtists(tracks1, tracks2, 5)
+    intersection_playlist = algs.getInformation(intersection_songs, 'uri')
 
-    intersection_songs = algs.IntersectionPlaylist(tracks1, tracks2)
-    intersection_size = len(intersection_songs)
+    score = algs.compatabilityIndex(tracks1, tracks2, intersection_songs)
 
-    INTERSECTION_DICT[access_token1 + "_" + access_token2] = intersection_songs
+    top5artists = algs.topNArtists(intersection_songs, 5)
+
+    
+    intersection_size = len(intersection_playlist)
+
+    INTERSECTION_DICT[access_token1 + "_" + access_token2] = intersection_playlist
 
     return render_template("last.html", score=int(score), count=intersection_size, artists=top5artists, success_page=url_for('success'))
 
@@ -158,7 +163,11 @@ def getAllTracks(sp):
 
         for song in SPTracks["items"]:
             track = song["track"]
-            song_item = { "name": track["name"], "uri": track["uri"], "artist": track["artists"][0]["name"], "album": track["album"]["name"] }
+
+            song_item = \
+                Song(track["uri"], track["name"], track["artists"][0]["name"], 
+                     map(lambda x: x["name"], track["artists"][1:]), 
+                     track["album"]["name"], track["duration_ms"])
             tracks.append(song_item)
 
         offset += SONGS_PER_TIME

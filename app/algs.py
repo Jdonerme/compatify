@@ -1,31 +1,72 @@
 import random, math
 
+
 ''' Logic for compatify. 5c spring hackathon. 4 /16/2016. coded by Joe Donermeyer
-on the team of Joon Hee Lee, Catherine Ma, and Celia Zhang '''
+on the team of Joon Hee Lee, Catherine Ma, and Celia Zhang.
+
+    Updated on 9/11/2018 to not count different versions of the same song as 
+    independent. '''
 
 
-''' Given a list of dictionaries representing songs, returns a list of the key values
+''' Given a list of song objects, returns a list of the key values
  of the songs. '''
-def GetInformation(a, key='uri'):
-    c = []
-    for i in range(len(a)):
-        c.append(a[i][key])
-    return c
-''' a and b are lists of dictionaries. c is a dictionary containing information of
-The songs in common. Ignores duplicates     '''   
-def Intersection(a, b, key='uri'):
-    c = []
-    my_dict = {'': False}
+def getInformation(playlist, key='uri'):
+    return map(lambda x: x[key], playlist)
+
+""" given a list of songs, finds the number of unique songs.
+    
+    Note that some songs with the same identifier might be different versions
+    of the same song so the equality check is necessary. """
+
+def non_duplicate_playlist_length(playlist):
+    songs_seen = {}
+    count = 0
+    for song in playlist:
+        identifier = song.get_identifier()
+        # if no version of the song has been seen before
+        if identifier not in songs_seen:
+            songs_seen[identifier] = song
+
+        # or if the song has been seen before but it was a different version
+        elif songs_seen[identifier] != song:
+            count += 1
+    print (count, len(songs_seen), 'a')
+    return count + len(songs_seen)
+
+''' Given playlist_a and playlist_b lists of song objects, find the intersection.
+
+    Initially finds songs with that share the title and artist and then checks
+    to confirm that they are the same version of the song.
+
+    returns a list of the intersection songs.
+
+    '''   
+def intersection(playlist_a, playlist_b):
+    intersection_songs = []
+    playlist_a_songs = {}
     counted_already = {}
-    for i in range(len(a)):
-        my_dict[a[i][key]] = True  
-    for j in range(len(b)):
-        if (my_dict.get(b[j][key])):
-            if (not counted_already.get(b[j][key])):
-                counted_already[b[j][key]] = True
-                c.append(b[j])
-    #print "There were %s songs in common. They were: \n" %len(c), c
-    return c
+
+    for song_a in playlist_a:
+        identifier = song_a.get_identifier()
+        playlist_a_songs[identifier] = song_a
+
+    song_a = None
+    for song_b in playlist_b:
+        identifier = song_b.get_identifier()
+
+        song_a = playlist_a_songs.get(identifier)
+
+        # if there was a version of the song in playlist a 
+        if song_a == song_b:
+
+            if (not counted_already.get(identifier)):
+                counted_already[identifier] = True
+                intersection_songs.append(song_b)
+        else:
+            # there is another version of the song
+            intersection_songs.append(song_b)
+          
+    return intersection_songs
 
 ''' a and b are lists. c is a list of the elements in either. Returns a list of
 all songs in either list. '''
@@ -42,7 +83,7 @@ def Union(a, b, key = 'uri'):
     return c
 ''' a and b are lists of dictionaries that contain song information. returns c, 
  a list of dictionaries representing information of songs in a that aren't in  b. '''
-def OnlyInFirst(a, b, key = 'uri'):
+def onlyInFirst(a, b, key = 'uri'):
     c = []
     my_dict = {'': False}
     for i in range(len(b)):
@@ -50,45 +91,56 @@ def OnlyInFirst(a, b, key = 'uri'):
     for j in range(len(b)):
         if (not my_dict.get(a[j][key])):                                
             c.append(a[j])
-    #print c
+    #print c 
     return c
-''''a and b are lists of dictionaries that contain song information. Returns c, a
-dictionary mapping how many instances of different a paramater were in common.
- key is the paramater we're interested in. only considers things that are in
- common amongst songs in the intersection. Thus if 5 songs are in common between a
- and b and the key is albums, it will produce a count of how often different albums
- appear in that set of 5 songs.'''
-def InCommonCounts(a, b, key):
-    c = Intersection(a, b)
-    artistcount = {}
-    for i in range(len(c)):
-        if (not artistcount.get(c[i][key])):
-            artistcount[c[i][key]] = 1
-        else:
-            artistcount[c[i][key]] += 1
-    #print artistcount    
-    return artistcount
 
-'''Given a dictionary, a, mapping instances of an key to number of occurances, 
-returns a sorted list of the keys corresponding to the top n occurances. 
- returns as a tuple (key, occurances) '''
-def TopNOccurrences(a, n):
-    c = []
-    x = sorted(a, key=a.get, reverse=True)
+''' intersection_songs contains a list of song objects shared. 
+
+    Returns inCommonCount, a dictionary mapping how many instances of different
+    a paramater were in common. key is the paramater we're interested in. 
+
+    Thus if 5 songs are in the interesction and the key is albums, it will 
+    produce a count of how often different albums appear in that set of 5 songs.
+
+    '''
+def inCommonCounts(intersection_songs, key):
+    inCommonCount = {}
+    for song in intersection_songs:
+        if (not inCommonCount.get(song[key])):
+            inCommonCount[song[key]] = 1
+        else:
+            inCommonCount[song[key]] += 1
+   
+    return inCommonCount
+
+'''Given a playlist of songs, maps instances of an key to number of occurences, 
+
+returns a sorted list of the keys corresponding to the top n occureneces. 
+ 
+ returns as a tuple (key, occureneces) '''
+def topNOccurrences(playlist, n):
+    top_occureneces = []
+    x = sorted(playlist, key=playlist.get, reverse=True)
     
     if n > len(x):
         for i in range(len(x)):
-            c.append((x[i], a[x[i]]))
+            top_occureneces.append((x[i], playlist[x[i]]))
     else:
         for i in range(n):
-            c.append((x[i], a[x[i]]))
-    #print c
-    return c
+            top_occureneces.append((x[i], playlist[x[i]]))
+
+    return top_occureneces
 '''finds the compatability index. What percentage of songs in the smaller
    sized playlist are in common. Rounds to two decimals '''
-def CompatabilityIndex(a, b):
-    c = Intersection(a, b, 'uri')
-    percentage = 100.0 * len(c) / min(len(a), len(b))
+def compatabilityIndex(playlist_a, playlist_b, intersection_songs=None):
+    if intersection_songs is None:
+        intersection_songs = Intersection(a, b, 'uri')
+
+    a_length = non_duplicate_playlist_length(playlist_a)
+    b_length = non_duplicate_playlist_length(playlist_b)
+    print (a_length, b_length, len(intersection_songs))
+    percentage = 100.0 * len(intersection_songs) \
+        / min(a_length, b_length)
     percentage = round(percentage, 2);
     return percentage
 
@@ -103,46 +155,41 @@ def generateRandomString(length):
 
     return text
 
-'''return list of song ids for the intersection playlist of a, b'''
-def IntersectionPlaylist(a, b):
-    c = Intersection(a, b)
-    playlist = GetInformation(c)
-    print playlist
-    return playlist
 '''return list of song ids in a but not in b'''
 def ExclusivePlaylist(a, b):
-    c = OnlyInFirst(a, b)
-    playlist = GetInformation(c)
-    print playlist
+    c = onlyInFirst(a, b)
+    playlist = getInformation(c)
+    # print playlist
     return playlist
+    
 '''returns a list of the top n artists of songs that were shared. 
    Each list element is a tuple of the artist name and how many 
-   occurances there where'''
-def TopNArtists(a, b, n):
-    c = InCommonCounts(a, b, 'artist')
-    topn = TopNOccurrences(c, n)
-    print topn
+   occureneces there where'''
+def topNArtists(intersection_songs, n):
+    common_counts = inCommonCounts(intersection_songs, 'artist')
+    topn = topNOccurrences(common_counts, n)
+    # print topn
     return topn
     
-#Main function
-if __name__ == '__main__':
-    dict1 = {'uri': 1, 'artist': 'Swift', 'album': '1985'}
-    dict2 = {'uri': 2, 'artist': 'Kanye', 'album': 'TLOP'}
-    dict5 = {'uri': 5, 'artist': 'Joon', 'album': 'Songs in the key of Junhui'}
-    dict6 = {'uri': 6, 'artist': 'Swift', 'album': 'speak now'}
-    dict10 = {'uri': 10, 'artist': 'Swift', 'album' : 'red'}
-    dict3 = {'uri': 3, 'artist': 'Kanye', 'album' : 'TLOP'}
-    dict7 = {'uri': 7, 'artist': 'Swift', 'album' : 'red'}    
-    #print OnlyInFirst([dict1, dict2, dict5, dict6, dict10], [dict2, dict3, dict10, dict7])
-    #print Union([dict1, dict2, dict5, dict6, dict10], [dict2, dict3, dict10, dict7])
-    #print Intersection([dict1, dict2, dict5, dict6, dict10], [dict2, dict3, dict10, dict7])
-    #x = InCommonCounts([dict1, dict2, dict3, dict7, dict5, dict6, dict10], [dict1, dict2, dict3, dict5, dict6, dict10], 'album')
-    #print TopNOccurrences(x, 40)
-    #x = InCommonCounts([dict1, dict2, dict3, dict7, dict5, dict6, dict10], [dict1, dict2, dict3, dict5, dict6, dict10], 'artist')
-    #print TopNOccurrences(x, 40)    
+# #Main function
+# if __name__ == '__main__':
+#     dict1 = {'uri': 1, 'artist': 'Swift', 'album': '1985', 'name': 'a', 'duration': 4000}
+#     dict2 = {'uri': 2, 'artist': 'Kanye', 'album': 'TLOP', 'name': 'v', 'duration': 4000}
+#     dict5 = {'uri': 5, 'artist': 'Joon', 'album': 'Songs in the key of Junhui', 'name': 'v', 'duration': 4000}
+#     dict6 = {'uri': 6, 'artist': 'Swift', 'album': 'speak now', 'name': 'v', 'duration': 4000}
+#     dict10 = {'uri': 10, 'artist': 'Swift', 'album' : 'red', 'name': 'a', 'duration': 4000}
+#     dict3 = {'uri': 3, 'artist': 'Kanye', 'album' : 'TLOP', 'name': 'v', 'duration': 4000}
+#     dict7 = {'uri': 7, 'artist': 'Swift', 'album' : 'red', 'name': 'a', 'duration': 4000}    
+#     # print OnlyInFirst([dict1, dict2, dict5, dict6, dict10], [dict2, dict3, dict10, dict7])
+#     # print Union([dict1, dict2, dict5, dict6, dict10], [dict2, dict3, dict10, dict7])
+#     print intersection([dict1, dict2, dict5, dict6, dict10], [dict2, dict3, dict7])
+#     # x = InCommonCounts([dict1, dict2, dict3, dict7, dict5, dict6, dict10], [dict1, dict2, dict3, dict5, dict6, dict10], 'album')
+#     # print TopNOccurrences(x, 40)
+#     # x = InCommonCounts([dict1, dict2, dict3, dict7, dict5, dict6, dict10], [dict1, dict2, dict3, dict5, dict6, dict10], 'artist')
+#     # print TopNOccurrences(x, 40)    
     
-    #y = Union([dict1, dict2, dict5, dict6, dict10], [dict2, dict3, dict10, dict7])
-    #print GetInformation(y)
+#     # y = Union([dict1, dict2, dict5, dict6, dict10], [dict2, dict3, dict10, dict7])
+#     # print GetInformation(y)
     
-    #Intersection([dict1, dict2, dict5, dict6, dict10], [dict1, dict2, dict3, dict10, dict7])
+#     # Intersection([dict1, dict2, dict5, dict6, dict10], [dict1, dict2, dict3, dict10, dict7])
     
