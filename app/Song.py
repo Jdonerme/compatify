@@ -27,7 +27,7 @@ class Song(object):
 
     '''
     def get_identifier(self):
-        return self.name + "-" + self.artist
+        return self.name.lower() + "-" + self.artist.lower()
 
     ''' 
         How to consider two songs as the same. If the uri is the same the track
@@ -46,8 +46,11 @@ class Song(object):
                 return True 
             elif self.featured_artists != other.featured_artists:
                 return False
-            return (self.name == other.name and self.artist == other.artist and 
-                     (abs(self.duration - other.duration) < sigTimeDifference))
+            if (self.name.lower() == other.name.lower() and \
+                self.artist == other.artist and \
+                (abs(self.duration - other.duration) < sigTimeDifference)):
+                return True
+
         else:
             return False
     # not equal to go with equality definition
