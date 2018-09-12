@@ -30,7 +30,6 @@ def non_duplicate_playlist_length(playlist):
         # or if the song has been seen before but it was a different version
         elif songs_seen[identifier] != song:
             count += 1
-    print (count, len(songs_seen), 'a')
     return count + len(songs_seen)
 
 ''' Given playlist_a and playlist_b lists of song objects, find the intersection.
@@ -138,7 +137,6 @@ def compatabilityIndex(playlist_a, playlist_b, intersection_songs=None):
 
     a_length = non_duplicate_playlist_length(playlist_a)
     b_length = non_duplicate_playlist_length(playlist_b)
-    print (a_length, b_length, len(intersection_songs))
     percentage = 100.0 * len(intersection_songs) \
         / min(a_length, b_length)
     percentage = round(percentage, 2);
