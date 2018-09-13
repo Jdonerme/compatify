@@ -20,21 +20,20 @@ def getInformation(playlist, key='uri'):
 
 def non_duplicate_playlist_length(playlist):
     songs_seen = {}
-    count = 0
     for song in playlist:
-        identifier = song.get_identifier()
+        identifier = song.identifier
         # if no version of the song has been seen before
         if identifier not in songs_seen:
-            songs_seen[identifier] = song
+            songs_seen[identifier] = [song]
 
         # or if the song has been seen before but it was a different version
-        elif songs_seen[identifier] != song:
-            count += 1
-    return count + len(songs_seen)
+        elif song not in songs_seen[identifier]:
+            songs_seen[identifier].append(song)
+    return sum(list(map(len, songs_seen.values())))
 
 ''' Given playlist_a and playlist_b lists of song objects, find the intersection.
 
-    Initially finds songs with that share the title and artist and then checks
+    Initially finds songs with that share the identifier and then checks
     to confirm that they are the same version of the song.
 
     returns a list of the intersection songs.
@@ -45,26 +44,37 @@ def intersection(playlist_a, playlist_b):
     playlist_a_songs = {}
     counted_already = {}
 
+    # for each song in playlist a
     for song_a in playlist_a:
-        identifier = song_a.get_identifier()
-        playlist_a_songs[identifier] = song_a
+        identifier = song_a.identifier
+
+        # if no version of the song has been seen before
+        if identifier not in playlist_a_songs:
+            # save the song for cross-checking
+            playlist_a_songs[identifier] = [song_a]
+
+        # if no version of the song that has been seen before matches this one
+        elif song_a not in playlist_a_songs[identifier]:
+
+            #save the song for cross checking
+            playlist_a_songs[identifier].append(song_a)
 
     song_a = None
+    # for each song in playlist b
     for song_b in playlist_b:
-        identifier = song_b.get_identifier()
+        identifier = song_b.identifier
 
-        song_a = playlist_a_songs.get(identifier)
+        # for all version of the song in playlist a
+        song_a_list = playlist_a_songs.get(identifier)
 
-        # if there was a version of the song in playlist a 
-        if song_a == song_b:
+        # for each version of the song in playlist a
+        for i, song_a in enumerate(song_a_list):
 
-            if (not counted_already.get(identifier)):
-                counted_already[identifier] = True
+            # if there is a version of the song in playlist a that matches
+            if song_a == song_b:
+
                 intersection_songs.append(song_b)
-        else:
-            # there is another version of the song
-            intersection_songs.append(song_b)
-          
+                break
     return intersection_songs
 
 ''' a and b are lists. c is a list of the elements in either. Returns a list of

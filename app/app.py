@@ -150,7 +150,6 @@ def success():
 
 def getAllTracks(sp):
     tracks = []
-
     SONGS_PER_TIME = 50
     offset=0
 
@@ -158,14 +157,12 @@ def getAllTracks(sp):
         SPTracks = sp.current_user_saved_tracks(limit=SONGS_PER_TIME, offset=offset) 
 
         if len(SPTracks["items"]) == 0:
-        #if offset >= 50:
             break
-
         for song in SPTracks["items"]:
             track = song["track"]
 
             song_item = \
-                Song(track["uri"], track["name"], track["artists"][0]["name"], 
+                Song(sp, track["uri"], track["name"], track["artists"][0]["name"],
                      map(lambda x: x["name"], track["artists"][1:]), 
                      track["album"]["name"], track["duration_ms"])
             tracks.append(song_item)

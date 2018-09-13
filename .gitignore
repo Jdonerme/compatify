@@ -1,2 +1,3 @@
 .spotipyoauthcache
 *.pyc
+*.DS_Store

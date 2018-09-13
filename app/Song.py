@@ -1,4 +1,22 @@
+import string
 sigTimeDifference = 10000 # ms
+
+
+def lazy_property(fn):
+    '''Decorator that makes a property lazy-evaluated.
+
+    '''
+    attr_name = '_lazy_' + fn.__name__
+
+    @property
+    def _lazy_property(self):
+        if not hasattr(self, attr_name):
+            setattr(self, attr_name, fn(self))
+        return getattr(self, attr_name)
+    return _lazy_property
+
+def simple_string(s):
+    return s.lower().translate({string.punctuation: None})
 
 """ A object to hold necessary song fields.
 
@@ -9,7 +27,8 @@ sigTimeDifference = 10000 # ms
 
     """
 class Song(object):
-    def __init__(self, uri, name, artist, features, album, duration):
+    def __init__(self, sp, uri, name, artist, features, album, duration):
+        self.sp = sp
         self.uri = uri
         self.name = name
         self.artist = artist
@@ -17,17 +36,30 @@ class Song(object):
         self.album = album
         self.duration = duration
 
+        ''' A string that is unique to each song but will be the same for
+        different versions of the same song.
+
+        '''
+        self.identifier = simple_string(self.name) + "-" + \
+                          simple_string(self.artist)
+            # + "-" + simple_string(self.artist)
+
+        # save some attributes in a dictionary for access with [] notation
         self.attributes = { "name": self.name, "uri": self.uri, "artist": 
               self.artist, "album": self.album, "duration": self.duration,
-              "featured_artists": self.featured_artists
+              "featured_artists": self.featured_artists,
+              "identifier": self.identifier
             }
 
-    ''' A string that is unique to each song but will be the same for different 
-        versions of the same song.
+    @lazy_property
+    def audio_features(self):
+        # Get Audio features info
+        return self.sp.audio_features([self.uri])
 
-    '''
-    def get_identifier(self):
-        return self.name.lower() + "-" + self.artist.lower()
+
+    def has_similar_features_with(self, other):
+        #todo compare self and other audio features
+        return False
 
     ''' 
         How to consider two songs as the same. If the uri is the same the track
@@ -46,13 +78,12 @@ class Song(object):
                 return True 
             elif self.featured_artists != other.featured_artists:
                 return False
-            if (self.name.lower() == other.name.lower() and \
-                self.artist == other.artist and \
+
+            elif (self.identifier == other.identifier and \
                 (abs(self.duration - other.duration) < sigTimeDifference)):
                 return True
-
-        else:
-            return False
+            return self.has_similar_features_with(other)
+        return False
     # not equal to go with equality definition
     def __ne__(self, other):
         return (not self.__eq__(other))
