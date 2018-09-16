@@ -97,6 +97,8 @@ class Song(object):
         name = self.name.encode('utf-8').strip()
         artist = self.artist.encode('utf-8').strip()
         album = self.album.encode('utf-8').strip()
+        uri = self.uri.encode('utf-8').strip()
         return "Title: %s \n" \
                "artist: %s \n" \
-               "album: %s" % (name, artist, album)
+               "album: %s\n" \
+               "uri: %s \n"  % (name, artist, album, uri)
