@@ -1,6 +1,7 @@
 import random, math
 
 
+
 ''' Logic for compatify. 5c spring hackathon. 4 /16/2016. coded by Joe Donermeyer
 on the team of Joon Hee Lee, Catherine Ma, and Celia Zhang.
 
@@ -46,6 +47,7 @@ def intersection(playlist_a, playlist_b):
 
     # for each song in playlist a
     for song_a in playlist_a:
+
         identifier = song_a.identifier
 
         # if no version of the song has been seen before
@@ -73,6 +75,8 @@ def intersection(playlist_a, playlist_b):
             # if there is a version of the song in playlist a that matches
             if song_a == song_b:
 
+                # already included this version of the song
+                del song_a_list[i]
                 intersection_songs.append(song_b)
                 break
     return intersection_songs
