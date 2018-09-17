@@ -110,14 +110,20 @@ def getSongs():
     TRACKS_DICT[1] = tracks1
     tracks2 = TRACKS_DICT[2]
 
-    intersection_songs = algs.intersection(tracks1, tracks2)
+    if tracks1 == [] or tracks2 == []:
+        intersection_songs = []
+        intersection_playlist = []
+        score = 0
+        top5artists = []
+    else:
 
-    intersection_playlist = algs.getInformation(intersection_songs, 'uri')
+        intersection_songs = algs.intersection(tracks1, tracks2)
 
-    score = algs.compatabilityIndex(tracks1, tracks2, intersection_songs)
+        intersection_playlist = algs.getInformation(intersection_songs, 'uri')
 
-    top5artists = algs.topNArtists(intersection_songs, 5)
+        score = algs.compatabilityIndex(tracks1, tracks2, intersection_songs)
 
+        top5artists = algs.topNArtists(intersection_songs, 5)
     
     intersection_size = len(intersection_playlist)
 
@@ -149,7 +155,7 @@ def success():
     if user_name2 == None:
         user_name2 = user_id2
 
-    playlist_name = 'Compatify-' + user_name1 + '-' + user_name2
+    playlist_name = 'Compatify ' + user_name1 + ' ' + user_name2
 
     new_playlist1 = sp1.user_playlist_create(user_id1, playlist_name, public=False)
     new_playlist2 = sp2.user_playlist_create(user_id2, playlist_name, public=False)
