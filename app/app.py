@@ -36,6 +36,7 @@ sp_oauth2 = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIP
 
 
 INTERSECTION_DICT = {}
+TRACKS_DICT = {}
 
 
 # VIEWS
@@ -71,33 +72,58 @@ def callback2():
     if code and state == STATE2:
         token = sp_oauth2.get_access_token(code)
         session["TOKEN2"] = token
-        return render_template("loading2.html")
+
+        access_token2 = token["access_token"]
+
+        sp2 = spotipy.Spotify(auth=access_token2)
+        message = "Loading %s's Songs..." % sp2.me()["display_name"]
+        return render_template("loading.html",
+                                message=message, user=2)
 
     else:
         return redirect(url_for('index'))
 
-@app.route('/getsongs2')
-def getsongs2():
-
+@app.route('/getSongs')
+def getSongs():
+    user = int(request.args.get("user"))
     token1 = session["TOKEN1"]
-    token2 = session["TOKEN2"]
     access_token1 = token1["access_token"]
+
+    token2 = session["TOKEN2"]
     access_token2 = token2["access_token"]
 
+    if user == 2:
+
+        sp2 = spotipy.Spotify(auth=access_token2)
+        tracks2 = getAllTracks(sp2)
+        TRACKS_DICT[2] = tracks2
+
+        sp1 = spotipy.Spotify(auth=access_token1)
+        message = "Now Loading %s's Songs..." % sp1.me()["display_name"]
+
+        return render_template("loading.html", 
+                                message=message, user=1)
+
     sp1 = spotipy.Spotify(auth=access_token1)
-    sp2 = spotipy.Spotify(auth=access_token2)
-
     tracks1 = getAllTracks(sp1)
-    tracks2 = getAllTracks(sp2)
 
-    intersection_songs = algs.intersection(tracks1, tracks2)
+    TRACKS_DICT[1] = tracks1
+    tracks2 = TRACKS_DICT[2]
 
-    intersection_playlist = algs.getInformation(intersection_songs, 'uri')
+    if tracks1 == [] or tracks2 == []:
+        intersection_songs = []
+        intersection_playlist = []
+        score = 0
+        top5artists = []
+    else:
 
-    score = algs.compatabilityIndex(tracks1, tracks2, intersection_songs)
+        intersection_songs = algs.intersection(tracks1, tracks2)
 
-    top5artists = algs.topNArtists(intersection_songs, 5)
+        intersection_playlist = algs.getInformation(intersection_songs, 'uri')
 
+        score = algs.compatabilityIndex(tracks1, tracks2, intersection_songs)
+
+        top5artists = algs.topNArtists(intersection_songs, 5)
     
     intersection_size = len(intersection_playlist)
 
@@ -116,14 +142,20 @@ def success():
     intersection_songs = INTERSECTION_DICT[access_token1 + "_" + access_token2]
     del INTERSECTION_DICT[access_token1 + "_" + access_token2]
 
-
     sp1 = spotipy.Spotify(auth=access_token1)
     sp2 = spotipy.Spotify(auth=access_token2)
 
-    user_id1 = sp1.me()["id"]
-    user_id2 = sp2.me()["id"]
+    user1, user2 = sp1.me(), sp2.me()
 
-    playlist_name = 'Compatify-' + user_id1 + '-' + user_id2
+    user_id1, user_id2 = user1["id"], user2["id"]
+    user_name1, user_name2 = user1["display_name"], user2["display_name"]
+
+    if user_name1 == None:
+        user_name1 = user_id1
+    if user_name2 == None:
+        user_name2 = user_id2
+
+    playlist_name = 'Compatify ' + user_name1 + ' ' + user_name2
 
     new_playlist1 = sp1.user_playlist_create(user_id1, playlist_name, public=False)
     new_playlist2 = sp2.user_playlist_create(user_id2, playlist_name, public=False)
