@@ -1,5 +1,6 @@
 import string
 sigTimeDifference = 10000 # ms
+VERSION_KEY_WORDS = ["remaster", "mono", "stereo", "version"]
 
 
 def lazy_property(fn):
@@ -17,6 +18,16 @@ def lazy_property(fn):
 
 def simple_string(s):
     return s.lower().translate({string.punctuation: None})
+
+def get_identifier(name, artist):
+    song_name = name.lower()
+    for word in VERSION_KEY_WORDS:
+        if word in song_name and ' - ' in song_name:
+            index = song_name.index(' - ')
+            song_name = song_name[:index]
+    identifier = song_name.translate({string.punctuation: None}) + " - " + \
+                 artist.lower().translate({string.punctuation: None})
+    return identifier
 
 """ A object to hold necessary song fields.
 
@@ -40,9 +51,7 @@ class Song(object):
         different versions of the same song.
 
         '''
-        self.identifier = simple_string(self.name) + "-" + \
-                          simple_string(self.artist)
-            # + "-" + simple_string(self.artist)
+        self.identifier = get_identifier(name, artist)
 
         # save some attributes in a dictionary for access with [] notation
         self.attributes = { "name": self.name, "uri": self.uri, "artist": 
@@ -58,7 +67,9 @@ class Song(object):
 
 
     def has_similar_features_with(self, other):
-        #todo compare self and other audio features
+        if self.identifier == other.identifier:
+            return True
+
         return False
 
     ''' 
@@ -79,9 +90,11 @@ class Song(object):
             elif self.featured_artists != other.featured_artists:
                 return False
 
-            elif (self.identifier == other.identifier and \
-                (abs(self.duration - other.duration) < sigTimeDifference)):
+            elif simple_string(self.name) == simple_string(other.name) and \
+                simple_string(self.artist) == simple_string(other.artist) and \
+                (abs(self.duration - other.duration) < sigTimeDifference):
                 return True
+            # todo remove and move to algs
             return self.has_similar_features_with(other)
         return False
     # not equal to go with equality definition
