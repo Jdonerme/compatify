@@ -72,13 +72,25 @@ def intersection(playlist_a, playlist_b):
         # for each version of the song in playlist a
         for i, song_a in enumerate(song_a_list):
 
-            # if there is a version of the song in playlist a that matches
-            if song_a == song_b:
+            # if there is a version of the song in playlist a
+            if song_a.has_similar_features_with(song_b):
 
-                # already included this version of the song
-                del song_a_list[i]
-                intersection_songs.append(song_b)
-                break
+                # the song is included if it hasn't been counted
+                if identifier not in counted_already:
+                    intersection_songs.append(song_b)
+                    counted_already[identifier] = [song_b]
+
+                # if a version of the song has been seen but song_b is a new version
+                else:
+                    if song_b not in counted_already[identifier]:
+                        intersection_songs.append(song_b)
+                        counted_already[identifier].append(song_b)
+
+                # if a version of the song has been seen but song_a is a new version
+                if song_a not in counted_already[identifier]:
+                    intersection_songs.append(song_b)
+                    counted_already[identifier].append(song_a)
+
     return intersection_songs
 
 ''' a and b are lists. c is a list of the elements in either. Returns a list of

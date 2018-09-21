@@ -99,8 +99,8 @@ class Song(object):
                 self.artist_set == other.artist_set and \
                 (abs(self.duration - other.duration) < sigTimeDifference):
                 return True
-            # todo remove and move to algs
-            return self.has_similar_features_with(other)
+
+            return False
         return False
     # not equal to go with equality definition
     def __ne__(self, other):
