@@ -53,6 +53,11 @@ class Song(object):
         '''
         self.identifier = get_identifier(name, artist)
 
+        ''' A set containing all the artists that are credited on the song.
+
+        '''
+        self.artist_set = set(list(map(simple_string, [artist] + features)))
+
         # save some attributes in a dictionary for access with [] notation
         self.attributes = { "name": self.name, "uri": self.uri, "artist": 
               self.artist, "album": self.album, "duration": self.duration,
@@ -91,7 +96,7 @@ class Song(object):
                 return False
 
             elif simple_string(self.name) == simple_string(other.name) and \
-                simple_string(self.artist) == simple_string(other.artist) and \
+                self.artist_set == other.artist_set and \
                 (abs(self.duration - other.duration) < sigTimeDifference):
                 return True
             # todo remove and move to algs
