@@ -1,6 +1,6 @@
 import string, re
 sigTimeDifference = 10000 # ms
-VERSION_KEY_WORDS = ["remaster", "mono", "stereo", "version"]
+VERSION_KEY_WORDS = ["remaster", "mono", "stereo", "version", "live"]
 
 
 def lazy_property(fn):
@@ -78,6 +78,7 @@ class Song(object):
             # remove the features from the title since they're not always there
             song_name = song_name[:feat_index]
 
+        # remove version specific details from the song title 
         for word in VERSION_KEY_WORDS:
             if word in song_name and ' - ' in song_name:
                 index = song_name.index(' - ')
