@@ -1,4 +1,4 @@
-import string
+import string, re
 sigTimeDifference = 10000 # ms
 VERSION_KEY_WORDS = ["remaster", "mono", "stereo", "version"]
 
@@ -19,15 +19,7 @@ def lazy_property(fn):
 def simple_string(s):
     return s.lower().translate({string.punctuation: None})
 
-def get_identifier(name, artist):
-    song_name = name.lower()
-    for word in VERSION_KEY_WORDS:
-        if word in song_name and ' - ' in song_name:
-            index = song_name.index(' - ')
-            song_name = song_name[:index]
-    identifier = song_name.translate({string.punctuation: None}) + " - " + \
-                 artist.lower().translate({string.punctuation: None})
-    return identifier
+
 
 """ A object to hold necessary song fields.
 
@@ -46,17 +38,14 @@ class Song(object):
         self.featured_artists = features
         self.album = album
         self.duration = duration
+        self.artist_set = set(list(map(simple_string, [artist] + features)))
 
-        ''' A string that is unique to each song but will be the same for
-        different versions of the same song.
-
-        '''
-        self.identifier = get_identifier(name, artist)
+        self.set_identifier()
 
         ''' A set containing all the artists that are credited on the song.
 
         '''
-        self.artist_set = set(list(map(simple_string, [artist] + features)))
+        
 
         # save some attributes in a dictionary for access with [] notation
         self.attributes = { "name": self.name, "uri": self.uri, "artist": 
@@ -64,6 +53,38 @@ class Song(object):
               "featured_artists": self.featured_artists,
               "identifier": self.identifier
             }
+
+    ''' A string that is unique to each song but will be the same for
+        different versions of the same song.
+
+        '''
+    def set_identifier(self):
+        song_name = self.name.lower()
+
+        if " (feat. " in song_name:
+            feat_index = song_name.index(" (feat. ")
+
+            # if the features were not already recorded as artists for the track
+            if len(self.featured_artists) == 0:
+
+                start_artist_index = feat_index + 8
+                end_artist_index = song_name.rfind(')')
+
+                featured_artists = song_name[start_artist_index:end_artist_index]
+
+                featured_artists_list = re.split(" & | and |, ", featured_artists)
+                self.artist_set |= set(featured_artists_list)
+
+            # remove the features from the title since they're not always there
+            song_name = song_name[:feat_index]
+
+        for word in VERSION_KEY_WORDS:
+            if word in song_name and ' - ' in song_name:
+                index = song_name.index(' - ')
+                song_name = song_name[:index]
+        identifier = song_name.translate({string.punctuation: None}) + " - " + \
+                     self.artist.lower().translate({string.punctuation: None})
+        self.identifier = identifier
 
     @lazy_property
     def audio_features(self):
@@ -92,8 +113,6 @@ class Song(object):
         if isinstance(other, Song):
             if self.uri == other.uri:
                 return True 
-            elif self.featured_artists != other.featured_artists:
-                return False
 
             elif simple_string(self.name) == simple_string(other.name) and \
                 self.artist_set == other.artist_set and \
