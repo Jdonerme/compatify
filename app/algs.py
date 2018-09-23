@@ -45,6 +45,9 @@ def intersection(playlist_a, playlist_b):
     playlist_a_songs = {}
     counted_already = {}
 
+    if playlist_a == [] or playlist_b == []:
+        return []
+
     # for each song in playlist a
     for song_a in playlist_a:
 
@@ -68,6 +71,8 @@ def intersection(playlist_a, playlist_b):
 
         # for all version of the song in playlist a
         song_a_list = playlist_a_songs.get(identifier)
+        if not song_a_list:
+            continue
 
         # for each version of the song in playlist a
         for i, song_a in enumerate(song_a_list):
