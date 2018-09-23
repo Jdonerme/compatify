@@ -65,27 +65,23 @@ def intersection(playlist_a, playlist_b):
         if not song_a_list:
             continue
 
+        # the song is included if it hasn't been added yet
+        if identifier not in counted_already:
+            intersection_songs.append(song_b)
+            counted_already[identifier] = [song_b]
+
+        # the song is added if it as a unique version that hasn't been added yet
+        elif song_b not in counted_already[identifier]:
+                intersection_songs.append(song_b)
+                counted_already[identifier].append(song_b)
+
         # for each version of the song in playlist a
         for i, song_a in enumerate(song_a_list):
 
-            # if there is a version of the song in playlist a
-            if song_a.has_similar_features_with(song_b):
-
-                # the song is included if it hasn't been counted
-                if identifier not in counted_already:
-                    intersection_songs.append(song_b)
-                    counted_already[identifier] = [song_b]
-
-                # if a version of the song has been seen but song_b is a new version
-                else:
-                    if song_b not in counted_already[identifier]:
-                        intersection_songs.append(song_b)
-                        counted_already[identifier].append(song_b)
-
-                # if a version of the song has been seen but song_a is a new version
-                if song_a not in counted_already[identifier]:
-                    intersection_songs.append(song_b)
-                    counted_already[identifier].append(song_a)
+            # add the song if it's a unique version
+            if song_a not in counted_already[identifier]:
+                intersection_songs.append(song_b)
+                counted_already[identifier].append(song_a)
 
     return intersection_songs
 
