@@ -3,7 +3,8 @@ sigTimeDifference = 10000 # ms
 
 # words that are found in songs titles to differentiate versions of the same song
 DIFFERENT_VERSION_KEY_WORDS = ["version", "live", "studio", "rerecorded",
-                                "edit", "radio", "mix", "extended", "acoustic"]
+                                "edit", "radio", "mix", "extended", "acoustic",
+                                "edition", "remix"]
 
 ''' words that denote different versions of a song that are similar enough that
     they should not be included twice in the interesection playlist.
@@ -12,7 +13,7 @@ DIFFERENT_VERSION_KEY_WORDS = ["version", "live", "studio", "rerecorded",
     versions of the song match.
 
     '''
-SAME_VERSION_KEY_WORDS = ["remaster", "mono", "stereo"]
+SAME_VERSION_KEY_WORDS = ["remaster", "remastered", "mono", "stereo"]
 
 def lazy_property(fn):
     '''Decorator that makes a property lazy-evaluated.
@@ -38,12 +39,28 @@ def simple_string(s):
     """
 def get_simplified_song_name(name, keywords):
     song_name = name
+
+    # seach for word as a whole, not just if it appears in the string
+        # i.e. edit will not match if song title contains credits
+    words_in_song_name = re.split(" |\(|\)|\[|\]", song_name)
     for word in keywords:
-            if word in song_name and ' - ' in song_name:
-                pattern = ' - .*' + word + '.*$' # ex. "song - 2011 Remaster, song - single version"
-                song_name = re.sub(pattern, '', song_name)
+
+        if word in words_in_song_name:
+            pattern = ' - .*' + word + '.*$' # ex. "song - 2011 Remaster, song - single version"
+            song_name = re.sub(pattern, '', song_name)
+
+            pattern = ' \[.*' + word + '.*\]' # ex. [2001 Remaster]
+            song_name = re.sub(pattern, '', song_name)
+            pattern = ' \(.*' + word + '.*\)' # ex. (2001 Remaster)
+            song_name = re.sub(pattern, '', song_name)
+
     return song_name
 
+""" Remove information from a song title that lists featured artists. If the
+    featured artists have not already been counted as artists on track, include
+    them in the artist set.
+
+    """
 def take_artists_from_song_name(name, artist_set):
     song_name = name
     feat_index = song_name.index(" (feat. ")
