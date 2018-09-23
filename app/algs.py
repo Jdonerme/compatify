@@ -80,7 +80,7 @@ def intersection(playlist_a, playlist_b):
 
             # add the song if it's a unique version
             if song_a not in counted_already[identifier]:
-                intersection_songs.append(song_b)
+                intersection_songs.append(song_a)
                 counted_already[identifier].append(song_a)
 
     return intersection_songs
