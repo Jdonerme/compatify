@@ -40,8 +40,8 @@ def get_simplified_song_name(name, keywords):
     song_name = name
     for word in keywords:
             if word in song_name and ' - ' in song_name:
-                index = song_name.index(' - ')
-                song_name = song_name[:index]
+                pattern = ' - .*' + word + '.*$' # ex. "song - 2011 Remaster, song - single version"
+                song_name = re.sub(pattern, '', song_name)
     return song_name
 
 def take_artists_from_song_name(name, artist_set):
