@@ -2,7 +2,8 @@ import string, re
 sigTimeDifference = 10000 # ms
 
 # words that are found in songs titles to differentiate versions of the same song
-DIFFERENT_VERSION_KEY_WORDS = ["version", "live", "studio", "rerecorded", "edit"]
+DIFFERENT_VERSION_KEY_WORDS = ["version", "live", "studio", "rerecorded",
+                                "edit", "radio", "mix", "extended", "acoustic"]
 
 ''' words that denote different versions of a song that are similar enough that
     they should not be included twice in the interesection playlist.
@@ -11,7 +12,7 @@ DIFFERENT_VERSION_KEY_WORDS = ["version", "live", "studio", "rerecorded", "edit"
     versions of the song match.
 
     '''
-SAME_VERSION_KEY_WORDS = ["remaster", "mono", "stereo", "rerecorded"]
+SAME_VERSION_KEY_WORDS = ["remaster", "mono", "stereo"]
 
 def lazy_property(fn):
     '''Decorator that makes a property lazy-evaluated.
@@ -95,7 +96,6 @@ class Song(object):
               "featured_artists": self.featured_artists,
               "identifier": self.identifier
         }
-        
 
     ''' Set the strings that are used for song matching.
 
@@ -115,9 +115,9 @@ class Song(object):
         song_name = get_simplified_song_name(song_name, SAME_VERSION_KEY_WORDS)
         self.match_name = simple_string(song_name)
 
-        # remove any version specific details from the song title 
+        # remove any version specific details from the song title
         song_name = get_simplified_song_name(song_name, DIFFERENT_VERSION_KEY_WORDS)
-        
+
         identifier = simple_string(song_name) + " - " + \
                      simple_string(self.artist)
         self.identifier = identifier
