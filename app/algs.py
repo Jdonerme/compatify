@@ -16,21 +16,12 @@ def getInformation(playlist, key='uri'):
 
 """ given a list of songs, finds the number of unique songs.
     
-    Note that some songs with the same identifier might be different versions
-    of the same song so the equality check is necessary. """
+    Note that compatability, different versions of the same song are only
+    counted once."""
 
 def non_duplicate_playlist_length(playlist):
-    songs_seen = {}
-    for song in playlist:
-        identifier = song.identifier
-        # if no version of the song has been seen before
-        if identifier not in songs_seen:
-            songs_seen[identifier] = [song]
-
-        # or if the song has been seen before but it was a different version
-        elif song not in songs_seen[identifier]:
-            songs_seen[identifier].append(song)
-    return sum(list(map(len, songs_seen.values())))
+    identifiers = set(getInformation(playlist, "identifier"))
+    return len(identifiers)
 
 ''' Given playlist_a and playlist_b lists of song objects, find the intersection.
 
@@ -168,8 +159,9 @@ def compatabilityIndex(playlist_a, playlist_b, intersection_songs=None):
 
     a_length = non_duplicate_playlist_length(playlist_a)
     b_length = non_duplicate_playlist_length(playlist_b)
-    percentage = 100.0 * len(intersection_songs) \
-        / min(a_length, b_length)
+    interesction_length = non_duplicate_playlist_length(intersection_songs)
+
+    percentage = 100.0 * interesction_length / min(a_length, b_length)
     percentage = round(percentage, 2);
     return percentage
 
