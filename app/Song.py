@@ -1,6 +1,7 @@
 import string, re
 sigTimeDifference = 10000 # ms
-VERSION_KEY_WORDS = ["remaster", "mono", "stereo", "version", "live"]
+VERSION_KEY_WORDS = ["remaster", "mono", "stereo", "version", "live", "studio",
+                     "rerecorded", "edit"]
 
 
 def lazy_property(fn):
