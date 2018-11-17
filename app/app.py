@@ -106,8 +106,9 @@ def select():
     message = "Loading %s's Songs From the Chosen Sources..." % sp.me()["display_name"]
 
     playlists = PLAYLISTS_DICT[int(user)]
-    source_choices = [("saved", "saved songs")] + \
-                        list(map(lambda x : (x, x.name), playlists))
+    source_choices = list(map(lambda x : (x, x.name), playlists))
+    source_choices.sort(key = lambda x : x[1])
+    source_choices = [("saved", "Your Saved Songs")] + source_choices
 
     form = SelectForm()
     form.response.choices =  source_choices
