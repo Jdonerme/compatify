@@ -71,7 +71,8 @@ def take_artists_from_song_name(name, artist_set):
     featured_artists = song_name[start_artist_index:end_artist_index]
 
     featured_artists_list = re.split(" & | and |, ", featured_artists)
-    artist_set |= set(featured_artists_list)
+    featured_artists_set = set(list(map(simple_string, featured_artists_list)))
+    artist_set |= featured_artists_set
 
     # remove the features from the title since they're not always there
     song_name = song_name[:feat_index]
@@ -135,8 +136,9 @@ class Song(object):
         # remove any version specific details from the song title
         song_name = get_simplified_song_name(song_name, DIFFERENT_VERSION_KEY_WORDS)
 
+        # include all artists in identifier in case they are listed in a different order
         identifier = simple_string(song_name) + " - " + \
-                     simple_string(self.artist)
+                     " - ".join(self.artist_set)
         self.identifier = identifier
 
 
