@@ -3,7 +3,9 @@ import spotipy
 from spotipy import oauth2
 import os
 import algs
+import time
 from Song import Song
+from forms import SelectForm
 
 app = Flask(__name__)
 
@@ -75,13 +77,37 @@ def callback2():
 
         access_token2 = token["access_token"]
 
-        sp2 = spotipy.Spotify(auth=access_token2)
-        message = "Loading %s's Songs..." % sp2.me()["display_name"]
-        return render_template("loading.html",
-                                message=message, user=2)
+        url = "select?user=2"
+        return redirect(url)
 
     else:
         return redirect(url_for('index'))
+
+@app.route('/select', methods = ['GET', 'POST'])
+def select():
+    start_time = time.time()
+    user = int(request.args.get("user"))
+    if user == 2:
+        token = session["TOKEN2"]
+    else:
+        token = session["TOKEN1"]
+    access_token = token["access_token"]
+    sp = spotipy.Spotify(auth=access_token)
+    message = "Loading %s's Songs..." % sp.me()["display_name"]
+
+    sources = [(sp.current_user_saved_tracks, "saved songs")]
+    form = SelectForm()
+    form.response.choices =  sources
+    if(form.is_submitted()):
+        f = form.response.data
+
+        return render_template("loading.html", message=message, user=user)
+    elif time.time() - start_time > 100: # 100 seconds
+        print "using saved songs"
+        return render_template("loading.html", message=message, user=user)
+    else:
+        return render_template("select.html",
+                                message=message, user=user, form = form)
 
 @app.route('/getSongs')
 def getSongs():
@@ -98,11 +124,8 @@ def getSongs():
         tracks2 = getAllTracks(sp2)
         TRACKS_DICT[2] = tracks2
 
-        sp1 = spotipy.Spotify(auth=access_token1)
-        message = "Now Loading %s's Songs..." % sp1.me()["display_name"]
-
-        return render_template("loading.html", 
-                                message=message, user=1)
+        url = "select?user=1"
+        return redirect(url)
 
     sp1 = spotipy.Spotify(auth=access_token1)
     tracks1 = getAllTracks(sp1)

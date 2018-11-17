@@ -1,0 +1,30 @@
+<html>
+<head>
+	<title>Compatify</title>
+	<link rel="stylesheet" href={{ url_for('static', filename='all_pages.css') }}>
+  <link href='https://fonts.googleapis.com/css?family=Merienda+One' rel='stylesheet' type='text/css'>
+</head>
+<body>
+ </style>
+
+<img src={{ url_for('static', filename='concert_background.png') }} class="bg">
+<div class="overlay"></div>
+<div class="container">
+    <p class="caption" style="font-size:30px" align="center">
+        Select Sources From Which to Choose Songs.
+    </p>
+    <div class='uil-ball-css center' style='-webkit-transform:scale(0.6)'><div>
+
+      <form action="" method="post" name="respond">
+          {{ form.hidden_tag() }}
+
+          <div class = "containerQuestion">
+              <div class = "answers text-center">{{form.response}} </div>
+                <br>
+              <p class = "button"><input type="submit" value="Go"></p>
+            </div>
+      </form>
+
+    </div>
+  </div>
+</div>
