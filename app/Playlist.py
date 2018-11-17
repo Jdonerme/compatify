@@ -55,7 +55,6 @@ class Playlist(object):
     @lazy_property
     def tracks(self):
         song_objects = []
-        print ("Getting tracks for %s's playlist %s" % (self.username, self.name))
         results = self.sp.user_playlist_tracks(self.username, self.id,
                                    fields="items.track(uri,name,artists(name),album(name),duration_ms),next")
 
@@ -63,7 +62,7 @@ class Playlist(object):
             track = item['track']
             song_objects.append (create_song_obj_from_track_dict(self.sp, track))
         while results['next']:
-            results = sp.next(results)
+            results = self.sp.next(results)
             for item in results["items"]:
                 track = item['track']
                 song_objects.append (create_song_obj_from_track_dict(self.sp, track))
