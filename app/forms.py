@@ -1,7 +1,7 @@
-from flask_wtf import Form
+from flask_wtf import FlaskForm
 from wtforms.fields import SelectMultipleField
 from wtforms.validators import DataRequired
 
-class SelectForm(Form):
+class SelectForm(FlaskForm):
 	response = SelectMultipleField('Response', choices = [], \
 									  validators=[DataRequired()])
