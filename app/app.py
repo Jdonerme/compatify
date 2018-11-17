@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session
-import spotipy, os, algs, time
+import spotipy, os, algs
 from spotipy import oauth2
 from Song import Song, create_song_obj_from_track_dict
 from Playlist import Playlist, create_playlist_obj_from_dict
@@ -35,8 +35,12 @@ sp_oauth1 = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIP
 sp_oauth2 = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIPY_REDIRECT_URI2,state=STATE2,scope=SCOPE,cache_path=CACHE,show_dialog=True)
 
 
-INTERSECTION_DICT = {}
+INTERSECTION_PLAYLIST = []
+
+# list of the tracks and playlists for each user where the key is the integer user id
 TRACKS_DICT = {}
+PLAYLISTS_DICT = {}
+SELECTED = {}
 
 
 # VIEWS
@@ -65,7 +69,7 @@ def callback1():
 
 @app.route('/callback2')
 def callback2():
-
+    user = 2
     code = request.args.get('code')
     state = request.args.get('state')
 
@@ -74,69 +78,82 @@ def callback2():
         session["TOKEN2"] = token
 
         access_token2 = token["access_token"]
-
-        url = "select?user=2"
-        return redirect(url)
+        sp = getSpotifyClient(user)
+        message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
+        return render_template("loading.html", message=message, user=user,
+                                url="/playlists")
 
     else:
         return redirect(url_for('index'))
 
+@app.route('/playlists')
+def playlists():
+    user = request.args.get("user")
+    sp = getSpotifyClient(user)
+    message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
+
+    playlists = getAllUserObjects(sp, "playlists")
+    PLAYLISTS_DICT[int(user)] = playlists
+    url = "/select?user=" + user
+    return redirect(url)
+
+
 @app.route('/select', methods = ['GET', 'POST'])
 def select():
-    print ("starting select phase")
-    start_time = time.time()
-    user = int(request.args.get("user"))
-    if user == 2:
-        token = session["TOKEN2"]
-    else:
-        token = session["TOKEN1"]
-    access_token = token["access_token"]
-    sp = spotipy.Spotify(auth=access_token)
-    message = "Loading %s's Songs..." % sp.me()["display_name"]
+    user = request.args.get("user")
+    url = "/getSongs"
+    sp = getSpotifyClient(user)
+    message = "Loading %s's Songs From the Chosen Sources..." % sp.me()["display_name"]
 
-    sources = [(sp.current_user_saved_tracks, "saved songs")]
-    sources = [("saved", "saved songs")]
-    print "getting playlists"
-    playlists = getAllUserObjects(sp, "playlists")
-    #x.tracks
-    playlist_choices = sources + list(map(lambda x : (x.name, x.name), playlists))
+    playlists = PLAYLISTS_DICT[int(user)]
+    source_choices = [("saved", "saved songs")] + \
+                        list(map(lambda x : (x, x.name), playlists))
 
     form = SelectForm()
-    form.response.choices =  playlist_choices
+    form.response.choices =  source_choices
     if(form.is_submitted()):
 
         selection = form.data["response"]
-        for item in selection:
-            print  item
 
-        return render_template("loading.html", message=message, user=user)
-    elif time.time() - start_time > 100: # 100 seconds
-        print "using saved songs"
-        return render_template("loading.html", message=message, user=user)
-    else:
-        return render_template("select.html",
+        # save the selected playlists for the user, but don't count the saved
+        # songs as playlist if it's chosen to be included.
+        if selection[0] == "saved":
+            PLAYLISTS_DICT[int(user)] = selection[1:]
+        else:
+            PLAYLISTS_DICT[int(user)] = selection
+
+        for item in selection:
+            # print  item
+            pass
+
+        return render_template("loading.html", message=message, user=user,
+                                url=url)
+
+    return render_template("select.html",
                                 message=message, user=user, form = form)
 
 @app.route('/getSongs')
 def getSongs():
-    user = int(request.args.get("user"))
-    token1 = session["TOKEN1"]
-    access_token1 = token1["access_token"]
+    user = request.args.get("user")
+    sp = getSpotifyClient(user)
 
-    token2 = session["TOKEN2"]
-    access_token2 = token2["access_token"]
+    if user == '2':
 
-    if user == 2:
-
-        sp2 = spotipy.Spotify(auth=access_token2)
-        tracks2 = getAllUserObjects(sp2, "tracks")
+        tracks2 = getAllUserObjects(sp, "tracks")
         TRACKS_DICT[2] = tracks2
 
-        url = "select?user=1"
-        return redirect(url)
+        other_user = '1'
+        sp = getSpotifyClient(other_user)
+        message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
 
-    sp1 = spotipy.Spotify(auth=access_token1)
-    tracks1 = getAllUserObjects(sp1, "tracks")
+        return render_template("loading.html", message=message, user=other_user,
+                                url="/playlists")
+
+    print "Selected Playlist Soures"
+    print len(PLAYLISTS_DICT[1])
+    print len(PLAYLISTS_DICT[2])
+
+    tracks1 = getAllUserObjects(sp, "tracks")
 
     TRACKS_DICT[1] = tracks1
     tracks2 = TRACKS_DICT[2]
@@ -158,7 +175,7 @@ def getSongs():
     
     intersection_size = len(intersection_playlist)
 
-    INTERSECTION_DICT[access_token1 + "_" + access_token2] = intersection_playlist
+    INTERSECTION_PLAYLIST = intersection_playlist
 
     return render_template("last.html", score=int(score), count=intersection_size, artists=top5artists, success_page=url_for('success'))
 
@@ -170,8 +187,8 @@ def success():
     access_token2 = token2["access_token"]
     session.clear()
 
-    intersection_songs = INTERSECTION_DICT[access_token1 + "_" + access_token2]
-    del INTERSECTION_DICT[access_token1 + "_" + access_token2]
+    intersection_songs = INTERSECTION_PLAYLIST
+    del INTERSECTION_PLAYLIST
 
     sp1 = spotipy.Spotify(auth=access_token1)
     sp2 = spotipy.Spotify(auth=access_token2)
@@ -211,6 +228,16 @@ def success():
 
 # Methods
 
+def getSpotifyClient(user):
+    key = "TOKEN" + str(user)
+    access_token = session[key]["access_token"]
+    sp = spotipy.Spotify(auth=access_token)
+    return sp
+
+
+""" Either get all of a user's saved tracks or saved playlists.
+
+    """
 def getAllUserObjects(sp, userObject):
     objects = []
     OBJECTS_PER_TIME = 50
