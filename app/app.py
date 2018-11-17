@@ -138,9 +138,7 @@ def getSongs():
     sp = getSpotifyClient(user)
 
     if user == '2':
-
-        tracks2 = getAllUserObjects(sp, "tracks")
-        TRACKS_DICT[2] = tracks2
+        TRACKS_DICT[int(user)] = getAllUserObjects(sp, "tracks")
 
         other_user = '1'
         sp = getSpotifyClient(other_user)
@@ -153,9 +151,14 @@ def getSongs():
     print len(PLAYLISTS_DICT[1])
     print len(PLAYLISTS_DICT[2])
 
-    tracks1 = getAllUserObjects(sp, "tracks")
+    TRACKS_DICT[int(user)] = getAllUserObjects(sp, "tracks")
 
-    TRACKS_DICT[1] = tracks1
+    return redirect(url_for('comparison'))
+
+
+@app.route('/comparison')
+def comparison():
+    tracks1 = TRACKS_DICT[1]
     tracks2 = TRACKS_DICT[2]
 
     if tracks1 == [] or tracks2 == []:
@@ -177,7 +180,10 @@ def getSongs():
 
     INTERSECTION_PLAYLIST = intersection_playlist
 
-    return render_template("last.html", score=int(score), count=intersection_size, artists=top5artists, success_page=url_for('success'))
+    return render_template("last.html", score=int(score),
+                            count=intersection_size, artists=top5artists,
+                            success_page=url_for('success'))
+
 
 @app.route('/success')
 def success():
