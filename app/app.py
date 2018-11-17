@@ -96,8 +96,12 @@ def select():
     message = "Loading %s's Songs..." % sp.me()["display_name"]
 
     sources = [(sp.current_user_saved_tracks, "saved songs")]
+
+    playlists = getAllUserObjects(sp, "playlists")
+    playlist_choices = list(map(lambda x : (x, x), playlists))
+
     form = SelectForm()
-    form.response.choices =  sources
+    form.response.choices =  sources + playlist_choices
     if(form.is_submitted()):
         f = form.response.data
 
@@ -121,14 +125,14 @@ def getSongs():
     if user == 2:
 
         sp2 = spotipy.Spotify(auth=access_token2)
-        tracks2 = getAllTracks(sp2)
+        tracks2 = getAllUserObjects(sp2, "tracks")
         TRACKS_DICT[2] = tracks2
 
         url = "select?user=1"
         return redirect(url)
 
     sp1 = spotipy.Spotify(auth=access_token1)
-    tracks1 = getAllTracks(sp1)
+    tracks1 = getAllUserObjects(sp1, "tracks")
 
     TRACKS_DICT[1] = tracks1
     tracks2 = TRACKS_DICT[2]
@@ -203,28 +207,43 @@ def success():
 
 # Methods
 
-def getAllTracks(sp):
-    tracks = []
-    SONGS_PER_TIME = 50
+
+def getAllUserObjects(sp, userObject):
+    objects = []
+    OBJECTS_PER_TIME = 50
     offset=0
 
     while True:
-        SPTracks = sp.current_user_saved_tracks(limit=SONGS_PER_TIME, offset=offset) 
 
-        if len(SPTracks["items"]) == 0:
+        if userObject == "tracks":
+            SPObjects = sp.current_user_saved_tracks(limit=OBJECTS_PER_TIME, offset=offset)
+
+        elif userObject == "playlists" :
+            user = sp.me()["id"]
+            #SPObjects = sp.current_user_playlists(limit=OBJECTS_PER_TIME, offset=offset)
+            SPObjects = sp.user_playlists(user, limit=OBJECTS_PER_TIME, offset=offset)
+
+        else:
+            assert False # yolo
+
+        if len(SPObjects["items"]) == 0:
             break
-        for song in SPTracks["items"]:
-            track = song["track"]
+        for item in SPObjects["items"]:
 
-            song_item = \
-                Song(sp, track["uri"], track["name"], track["artists"][0]["name"],
-                     map(lambda x: x["name"], track["artists"][1:]), 
-                     track["album"]["name"], track["duration_ms"])
-            tracks.append(song_item)
+            if userObject == "tracks":
+                track = item["track"]
+                song_item = \
+                    Song(sp, track["uri"], track["name"], track["artists"][0]["name"],
+                         map(lambda x: x["name"], track["artists"][1:]),
+                         track["album"]["name"], track["duration_ms"])
+                objects.append(song_item)
+            else: # userObject == "playlist"
+                objects.append(item['name'])
 
-        offset += SONGS_PER_TIME
 
-    return tracks
+        offset += OBJECTS_PER_TIME
+
+    return objects
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=PORT_NUMBER, debug=True)
