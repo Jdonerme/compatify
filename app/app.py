@@ -15,7 +15,7 @@ PORT_NUMBER = int(os.environ.get('PORT', 8888))
 SPOTIPY_CLIENT_ID = '883896384d0c4d158bab154c01de29db'
 SPOTIPY_CLIENT_SECRET = '37443ee0c0404c44b755f3ed97c48493'
 
-PRODUCTION = True
+PRODUCTION = False
 
 if PRODUCTION:
     SPOTIPY_REDIRECT_URI1 = 'https://compatify.herokuapp.com/callback1'
@@ -39,7 +39,7 @@ INTERSECTION_PLAYLIST = []
 
 # list of the tracks and playlists for each user where the key is the integer user id
 TRACKS_DICT = {}
-PLAYLISTS_DICT = {}
+SONG_SOURCES_DICT = {}
 SELECTED = {}
 
 
@@ -93,7 +93,8 @@ def playlists():
     message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
 
     playlists = getAllUserObjects(sp, "playlists")
-    PLAYLISTS_DICT[int(user)] = playlists
+
+    SONG_SOURCES_DICT[int(user)] = playlists
     url = "/select?user=" + user
     return redirect(url)
 
@@ -105,8 +106,8 @@ def select():
     sp = getSpotifyClient(user)
     message = "Loading %s's Songs From the Chosen Sources..." % sp.me()["display_name"]
 
-    playlists = PLAYLISTS_DICT[int(user)]
-    source_choices = list(map(lambda x : (x, x.name), playlists))
+    playlists = SONG_SOURCES_DICT[int(user)]
+    source_choices = list(map(lambda x : (x.id, x.name), playlists))
     source_choices.sort(key = lambda x : x[1])
     source_choices = [("saved", "Your Saved Songs")] + source_choices
 
@@ -115,17 +116,16 @@ def select():
     if(form.is_submitted()):
 
         selection = form.data["response"]
+        selected_objects = []
 
         # save the selected playlists for the user, but don't count the saved
         # songs as playlist if it's chosen to be included.
         if selection[0] == "saved":
-            PLAYLISTS_DICT[int(user)] = selection[1:]
-        else:
-            PLAYLISTS_DICT[int(user)] = selection
+            selected_objects.append(selection[0])
+            selection = selection[1:]
 
-        for item in selection:
-            # print  item
-            pass
+        selected_objects += [p for p in playlists if p.id in selection]
+        SONG_SOURCES_DICT[int(user)] = selected_objects
 
         return render_template("loading.html", message=message, user=user,
                                 url=url)
@@ -137,22 +137,28 @@ def select():
 def getSongs():
     user = request.args.get("user")
     sp = getSpotifyClient(user)
+    songs = []
+
+    song_sources = SONG_SOURCES_DICT[int(user)]
+
+    # if the user wants to include saved songs
+    if song_sources[0] == "saved":
+        # getting the saved tracks uses a different function than getting playlists
+        song_sources = song_sources[1:]
+        songs = getAllUserObjects(sp, "tracks")
+
+    for playlist in song_sources:
+        songs += playlist.tracks
+
+    TRACKS_DICT[int(user)] = songs
 
     if user == '2':
-        TRACKS_DICT[int(user)] = getAllUserObjects(sp, "tracks")
-
         other_user = '1'
         sp = getSpotifyClient(other_user)
         message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
 
         return render_template("loading.html", message=message, user=other_user,
                                 url="/playlists")
-
-    print "Selected Playlist Soures"
-    print len(PLAYLISTS_DICT[1])
-    print len(PLAYLISTS_DICT[2])
-
-    TRACKS_DICT[int(user)] = getAllUserObjects(sp, "tracks")
 
     return redirect(url_for('comparison'))
 
