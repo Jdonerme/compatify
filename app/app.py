@@ -1,10 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, session
-import spotipy
+import spotipy, os, algs, time
 from spotipy import oauth2
-import os
-import algs
-import time
-from Song import Song
+from Song import Song, create_song_obj_from_track_dict
+from Playlist import Playlist, create_playlist_obj_from_dict
 from forms import SelectForm
 
 app = Flask(__name__)
@@ -85,6 +83,7 @@ def callback2():
 
 @app.route('/select', methods = ['GET', 'POST'])
 def select():
+    print ("starting select phase")
     start_time = time.time()
     user = int(request.args.get("user"))
     if user == 2:
@@ -96,14 +95,19 @@ def select():
     message = "Loading %s's Songs..." % sp.me()["display_name"]
 
     sources = [(sp.current_user_saved_tracks, "saved songs")]
-
+    sources = [("saved", "saved songs")]
+    print "getting playlists"
     playlists = getAllUserObjects(sp, "playlists")
-    playlist_choices = list(map(lambda x : (x, x), playlists))
+    #x.tracks
+    playlist_choices = sources + list(map(lambda x : (x.name, x.name), playlists))
 
     form = SelectForm()
-    form.response.choices =  sources + playlist_choices
+    form.response.choices =  playlist_choices
     if(form.is_submitted()):
-        f = form.response.data
+
+        selection = form.data["response"]
+        for item in selection:
+            print  item
 
         return render_template("loading.html", message=message, user=user)
     elif time.time() - start_time > 100: # 100 seconds
@@ -207,7 +211,6 @@ def success():
 
 # Methods
 
-
 def getAllUserObjects(sp, userObject):
     objects = []
     OBJECTS_PER_TIME = 50
@@ -219,12 +222,13 @@ def getAllUserObjects(sp, userObject):
             SPObjects = sp.current_user_saved_tracks(limit=OBJECTS_PER_TIME, offset=offset)
 
         elif userObject == "playlists" :
-            user = sp.me()["id"]
             #SPObjects = sp.current_user_playlists(limit=OBJECTS_PER_TIME, offset=offset)
+            user = sp.me()["id"]
             SPObjects = sp.user_playlists(user, limit=OBJECTS_PER_TIME, offset=offset)
-
         else:
-            assert False # yolo
+            raise TypeError ("getAllUserObjects is expecting to get only either"
+                             " saved_tracks or playlists")
+            return []
 
         if len(SPObjects["items"]) == 0:
             break
@@ -232,14 +236,10 @@ def getAllUserObjects(sp, userObject):
 
             if userObject == "tracks":
                 track = item["track"]
-                song_item = \
-                    Song(sp, track["uri"], track["name"], track["artists"][0]["name"],
-                         map(lambda x: x["name"], track["artists"][1:]),
-                         track["album"]["name"], track["duration_ms"])
-                objects.append(song_item)
+                created_item = create_song_obj_from_track_dict(sp, track)
             else: # userObject == "playlist"
-                objects.append(item['name'])
-
+                created_item = create_playlist_obj_from_dict(sp, item)
+            objects.append(created_item)
 
         offset += OBJECTS_PER_TIME
 
