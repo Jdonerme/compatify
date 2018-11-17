@@ -78,6 +78,19 @@ def take_artists_from_song_name(name, artist_set):
     song_name = song_name[:feat_index]
     return song_name, artist_set
 
+""" Create a Song Object in a useful format using the raw track information
+    returned by the Spotify API.
+
+    sp: spotify client object that was used to fetch the track
+    track (dict): raw track object returned from spotipy.
+
+    """
+
+def create_song_obj_from_track_dict(sp, track):
+    return Song(sp, track["uri"], track["name"], track["artists"][0]["name"],
+            map(lambda x: x["name"], track["artists"][1:]),
+            track["album"]["name"], track["duration_ms"])
+
 
 """ A object to hold necessary song fields.
 
@@ -183,7 +196,12 @@ class Song(object):
         artist = self.artist.encode('utf-8').strip()
         album = self.album.encode('utf-8').strip()
         uri = self.uri.encode('utf-8').strip()
-        return "Title: %s \n" \
-               "artist: %s \n" \
-               "album: %s\n" \
-               "uri: %s \n"  % (name, artist, album, uri)
+        return (
+            "-" * 50 + "\n"
+            "Title: %s \n" \
+            "Artist: %s \n" \
+            "Album: %s\n" \
+            "Uri: %s \n"  % (name, artist, album, uri) +
+            "-" * 50 + "\n"
+            )
+        return
