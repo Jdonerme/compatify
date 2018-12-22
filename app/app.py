@@ -114,6 +114,7 @@ def playlists():
 
 @app.route('/select', methods = ['GET', 'POST'])
 def select():
+    MAX_SONGS_TO_DISPLAY = 15
     user = request.args.get("user")
     url = "/getSongs/playlists"
 
@@ -146,8 +147,12 @@ def select():
         return render_template("loading.html", message=message, user=user,
                                 url=url)
 
+    # We don't the playlist selection drop down to be too big if there are a lot of
+    # playlists.
+    display_size = min(MAX_SONGS_TO_DISPLAY, len(source_choices))
     return render_template("select.html",
-                            message=message, user=user, form = form, name=name)
+                            message=message, user=user, form = form, name=name,
+                            display_size=display_size)
 
 @app.route('/getSongs/<source>')
 def getSongs(source):
