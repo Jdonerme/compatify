@@ -7,32 +7,30 @@
   <link href='https://fonts.googleapis.com/css?family=Merienda+One' rel='stylesheet' type='text/css'>
 </head>
 <body>
- </style>
 
 <img src={{ url_for('static', filename='concert_background.png') }} class="bg">
 <div class="overlay"></div>
 <div class="container">
+<img id="logo" class="center" src={{ url_for('static', filename='twoheadphones.png') }}>
 
-    <p class="caption" align="center">
+  <p class="caption" align="center">
         Select Playlists for {{name}}'s Song Selection.
-    </p>
+  </p>
     <br>
-    <form action="" method="post" name="playlist_list">
+  <form action="" method="post" name="playlist_list">
         {{ form.hidden_tag() }}
 
-        <div>
-            <div class="playlist_list text-center">{{form.response}} </div>
+        <div class="playlist_list text-center">
+            {{form.response}}
             <br>
             <br>
             <div class="text-center">
               <input type="submit" class="btn btn-success select_btn caption"
               value="Select">
-              </input>
             </div>
 
-          </div>
-      </form>
+        </div>
+  </form>
 
-    </div>
-  </div>
 </div>
+</body>
