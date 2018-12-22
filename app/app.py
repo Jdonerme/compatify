@@ -80,17 +80,30 @@ def callback2():
         access_token2 = token["access_token"]
         sp = getSpotifyClient(user)
         message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
-        return render_template("loading.html", message=message, user=user,
-                                url="/playlists")
+        return redirect(url_for('options'))
 
     else:
         return redirect(url_for('index'))
+
+@app.route('/options')
+def options():
+    return render_template("options.html")
+
+@app.route('/loadingPlaylists')
+def loadingPlaylists():
+    user = request.args.get("user")
+    sp = getSpotifyClient(user)
+    if user == 1:
+        message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
+    else:
+        message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
+    return render_template("loading.html", message=message,
+                                    user=user, url="/playlists")
 
 @app.route('/playlists')
 def playlists():
     user = request.args.get("user")
     sp = getSpotifyClient(user)
-    message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
 
     playlists = getAllUserObjects(sp, "playlists")
 
@@ -102,9 +115,12 @@ def playlists():
 @app.route('/select', methods = ['GET', 'POST'])
 def select():
     user = request.args.get("user")
-    url = "/getSongs"
+    url = "/getSongs/playlists"
+
     sp = getSpotifyClient(user)
-    message = "Loading %s's Songs From the Chosen Sources..." % sp.me()["display_name"]
+    name = sp.me()["display_name"]
+    message = "Loading %s's Songs From the Chosen Sources..." % name
+
 
     playlists = SONG_SOURCES_DICT[int(user)]
     source_choices = list(map(lambda x : (x.id, x.name), playlists))
@@ -131,15 +147,20 @@ def select():
                                 url=url)
 
     return render_template("select.html",
-                                message=message, user=user, form = form)
+                            message=message, user=user, form = form, name=name)
 
-@app.route('/getSongs')
-def getSongs():
+@app.route('/getSongs/<source>')
+def getSongs(source):
     user = request.args.get("user")
+
     sp = getSpotifyClient(user)
     songs = []
 
-    song_sources = SONG_SOURCES_DICT[int(user)]
+    # If playlist user was not selected, the only song source is the saved tracks
+    if not source == "playlists":
+        song_sources = ['saved']
+    else:
+        song_sources = SONG_SOURCES_DICT[int(user)]
 
     # if the user wants to include saved songs
     if song_sources[0] == "saved":
@@ -152,13 +173,15 @@ def getSongs():
 
     TRACKS_DICT[int(user)] = songs
 
-    if user == '2':
-        other_user = '1'
+    if user == '1':
+        other_user = '2'
         sp = getSpotifyClient(other_user)
-        message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
-
-        return render_template("loading.html", message=message, user=other_user,
-                                url="/playlists")
+        if not source == "playlists":
+            message = "Now Loading %s's Saved Songs..." % sp.me()["display_name"]
+            return render_template("loading.html", message=message, user=other_user,
+                                url="/getSongs/saved")
+        else:
+            return redirect(url_for('loadingPlaylists') +"?user=" + other_user)
 
     return redirect(url_for('comparison'))
 
@@ -198,10 +221,9 @@ def success():
     token2 = session["TOKEN2"]
     access_token1 = token1["access_token"]
     access_token2 = token2["access_token"]
-    session.clear()
-
     intersection_songs = INTERSECTION_PLAYLIST
-    del INTERSECTION_PLAYLIST
+
+    session.clear()
 
     sp1 = spotipy.Spotify(auth=access_token1)
     sp2 = spotipy.Spotify(auth=access_token2)
