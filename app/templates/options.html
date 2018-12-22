@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <title>Compatify</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+        <link href='https://fonts.googleapis.com/css?family=Lato' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" href={{ url_for('static', filename='all_pages.css') }}>
+        <link rel="stylesheet" href={{ url_for('static', filename='first.css') }}>
+        <link rel="stylesheet" href={{ url_for('static', filename='options.css') }}>
+    </head>
+
+    <body>
+        <img src={{ url_for('static', filename='concert_background.png') }} class="bg">
+        <div class="overlay"></div>
+        <div class="container">
+        <img id="logo" class="center" src={{ url_for('static', filename='twoheadphones.png') }}>
+        <br>
+        <p class="caption text-center">Which Songs Would You Like to Include?</p>
+        <br>
+        <br>
+        <div class=options_buttons>
+            <form>
+                <div class="text-center">
+                    <a type="button" class="btn btn-success main_btn" href="/loadingPlaylists?user=1"><div class="caption">Choose Playlists to Use</div></a>
+                </div>
+            </form>
+            <br>
+            <form>
+                <div class="text-center"><a type="button" class="btn btn-success main_btn" href="/getSongs/saved?user=1"><div class="caption">Use Saved Songs Only</div></a>
+                </div>
+            </form>
+        </div>
+    </body>
+</html>
