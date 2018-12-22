@@ -21,7 +21,7 @@
         {{ form.hidden_tag() }}
 
         <div class="playlist_list text-center">
-            {{form.response}}
+            {{form.response(**{"size": display_size})}}
             <br>
             <br>
             <div class="text-center">

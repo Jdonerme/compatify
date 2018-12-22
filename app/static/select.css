@@ -23,15 +23,15 @@
 
 select {
 	font-family: "Lato", sans-serif;
-    font-size: 14px;
+    font-size: 16px;
     color: white;
     background-color: #5cb85c;
-    max-width: 80%;
     overflow-x: auto;
     /*height: 80% !important;*/
 }
 
 option {
-	margin-top: 5px;
-	margin-left: 5px;
+	margin-top: 2%;
+	margin-bottom: 2%;
+	margin-left: 3%;
 }
