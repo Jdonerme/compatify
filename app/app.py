@@ -35,7 +35,7 @@ sp_oauth1 = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIP
 sp_oauth2 = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIPY_REDIRECT_URI2,state=STATE2,scope=SCOPE,cache_path=CACHE,show_dialog=True)
 
 
-INTERSECTION_PLAYLIST = []
+INTERSECTION_PLAYLIST = {}
 
 # list of the tracks and playlists for each user where the key is the integer user id
 TRACKS_DICT = {}
@@ -208,7 +208,7 @@ def comparison():
     
     intersection_size = len(intersection_playlist)
 
-    INTERSECTION_PLAYLIST = intersection_playlist
+    INTERSECTION_PLAYLIST["session"] = intersection_playlist
 
     return render_template("last.html", score=int(score),
                             count=intersection_size, artists=top5artists,
@@ -221,7 +221,7 @@ def success():
     token2 = session["TOKEN2"]
     access_token1 = token1["access_token"]
     access_token2 = token2["access_token"]
-    intersection_songs = INTERSECTION_PLAYLIST
+    intersection_songs = INTERSECTION_PLAYLIST["session"]
 
     session.clear()
 
