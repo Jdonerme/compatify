@@ -4,6 +4,8 @@ from spotipy import oauth2
 from Song import Song, create_song_obj_from_track_dict
 from Playlist import Playlist, create_playlist_obj_from_dict
 from forms import SelectForm
+from requests import ConnectionError , Timeout
+from werkzeug.exceptions import HTTPException
 
 app = Flask(__name__)
 
@@ -93,24 +95,33 @@ def options():
 def loadingPlaylists():
     user = request.args.get("user")
     sp = getSpotifyClient(user)
+
     if user == 1:
         message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
     else:
         message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
     return render_template("loading.html", message=message,
-                                    user=user, url="/playlists")
+                                user=user, url="/playlists")
+    return render_template("error.html")
 
 @app.route('/playlists')
 def playlists():
     user = request.args.get("user")
-    sp = getSpotifyClient(user)
+    try:
 
-    playlists = getAllUserObjects(sp, "playlists")
+        sp = getSpotifyClient(user)
 
-    SONG_SOURCES_DICT[int(user)] = playlists
-    url = "/select?user=" + user
-    return redirect(url)
+        playlists = getAllUserObjects(sp, "playlists")
 
+        SONG_SOURCES_DICT[int(user)] = playlists
+        url = "/select?user=" + user
+
+        return redirect(url)
+
+    except Timeout:
+        message = "HTTP Timeout loading playlist options. Please try again or \
+                   use saved songs only."
+        return render_template("error.html", message=message)
 
 @app.route('/select', methods = ['GET', 'POST'])
 def select():
@@ -157,38 +168,44 @@ def select():
 @app.route('/getSongs/<source>')
 def getSongs(source):
     user = request.args.get("user")
+    try:
+        sp = getSpotifyClient(user)
+        songs = []
 
-    sp = getSpotifyClient(user)
-    songs = []
-
-    # If playlist user was not selected, the only song source is the saved tracks
-    if not source == "playlists":
-        song_sources = ['saved']
-    else:
-        song_sources = SONG_SOURCES_DICT[int(user)]
-
-    # if the user wants to include saved songs
-    if song_sources[0] == "saved":
-        # getting the saved tracks uses a different function than getting playlists
-        song_sources = song_sources[1:]
-        songs = getAllUserObjects(sp, "tracks")
-
-    for playlist in song_sources:
-        songs += playlist.tracks
-
-    TRACKS_DICT[int(user)] = songs
-
-    if user == '1':
-        other_user = '2'
-        sp = getSpotifyClient(other_user)
+        # If playlist user was not selected, the only song source is the saved tracks
         if not source == "playlists":
-            message = "Now Loading %s's Saved Songs..." % sp.me()["display_name"]
-            return render_template("loading.html", message=message, user=other_user,
-                                url="/getSongs/saved")
+            song_sources = ['saved']
         else:
-            return redirect(url_for('loadingPlaylists') +"?user=" + other_user)
+            song_sources = SONG_SOURCES_DICT[int(user)]
 
-    return redirect(url_for('comparison'))
+        # if the user wants to include saved songs
+        if song_sources[0] == "saved":
+            # getting the saved tracks uses a different function than getting playlists
+            song_sources = song_sources[1:]
+            songs = getAllUserObjects(sp, "tracks")
+
+        for playlist in song_sources:
+            songs += playlist.tracks
+
+        TRACKS_DICT[int(user)] = songs
+
+        if user == '1':
+            other_user = '2'
+            sp = getSpotifyClient(other_user)
+            if not source == "playlists":
+                message = "Now Loading %s's Saved Songs..." % sp.me()["display_name"]
+                return render_template("loading.html", message=message, user=other_user,
+                                    url="/getSongs/saved")
+            else:
+                return redirect(url_for('loadingPlaylists') +"?user=" + other_user)
+
+        return redirect(url_for('comparison'))
+
+    except Timeout:
+        message = "HTTP timeout loading songs. Please try again or use a source \
+                   with fewer songs"
+
+        return render_template("error.html", message=message)
 
 
 @app.route('/comparison')
@@ -264,6 +281,27 @@ def success():
         else:
             break
     return render_template("success.html")
+
+@app.errorhandler(Exception)
+def handle_error(e):
+    code = 500
+    if isinstance(e, HTTPException):
+        code = e.code
+
+    elif isinstance(e, ConnectionError):
+        message="There was en error connecting to the Spotify API. \
+               Please check your network connection and try again. If the \
+               problem persists, try selecting sources with fewer songs."
+    elif isinstance(e, KeyError):
+        message = "The application is missing session data due to an unexpected \
+                   redirect. Please start again from the beginning."
+    elif isinstance(e, TimeoutError):
+        message = "HTTP timeout error. Please check your network connection and \
+                  try again."
+    else:
+        message = str(type(e)) + ":\t" + e.message
+
+    return render_template("error.html", message=message)
 
 
 # Methods
