@@ -125,7 +125,7 @@ def select():
 
     playlists = SONG_SOURCES_DICT[int(user)]
     source_choices = list(map(lambda x : (x.id, x.name), playlists))
-    source_choices.sort(key = lambda x : x[1])
+    source_choices.sort(key = lambda x : x[1].lower())
     source_choices = [("saved", "Your Saved Songs")] + source_choices
 
     form = SelectForm()
