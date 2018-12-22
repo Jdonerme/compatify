@@ -122,15 +122,27 @@ def playlists():
         # rv = t.stream(context)
         # rv.enable_buffering(5)
         # return rv
+        complete_playlist_list = []
 
         print ('1')
         yield 'temp loading page'
         # yield render_template("loading.html", message=message,
                                 # user=user, url="/playlists")   # notice that we are yielding something as soon as possible
         print ('2')
-        playlists = getAllUserObjects(sp, "playlists", timeout=3)
-        print ('3')
-        SONG_SOURCES_DICT[int(user)] = playlists
+
+        while True:
+            playlists, completed = getAllUserObjects(sp, "playlists",
+                                        starting_offset=len(complete_playlist_list),
+                                        timeout=3)
+            complete_playlist_list += playlists
+            if completed:
+                break
+            else:
+                yield "<br>"
+                yield "Still loading..."
+        yield "done loading"
+        print ('done loading')
+        SONG_SOURCES_DICT[int(user)] = complete_playlist_list
         url = "/select?user=" + user
 
         yield ('<script>window.location.replace("' + url + '");</script>')
@@ -198,7 +210,7 @@ def getSongs(source):
         if song_sources[0] == "saved":
             # getting the saved tracks uses a different function than getting playlists
             song_sources = song_sources[1:]
-            songs = getAllUserObjects(sp, "tracks")
+            songs, completed = getAllUserObjects(sp, "tracks")
 
         for playlist in song_sources:
             songs += playlist.tracks
@@ -331,6 +343,11 @@ def getSpotifyClient(user):
 
 """ Either get all of a user's saved tracks or saved playlists.
 
+    returns:
+        objects [arr]: array of the objecst requset
+        completed: whether all of the objects that exit are returned. If
+            completed is false, the call was terminated early to avoid a timeout.
+
     """
 def getAllUserObjects(sp, userObject, starting_offset=0, timeout=None):
     start = time.time()
@@ -338,11 +355,12 @@ def getAllUserObjects(sp, userObject, starting_offset=0, timeout=None):
     objects = []
     OBJECTS_PER_TIME = 50
     offset=starting_offset
+    completed = False
 
     while True:
         # if the request is taking too long, stop this function
         if timeout and (time.time() - start) > timeout:
-            return objects
+            return objects, completed
 
         if userObject == "tracks":
             SPObjects = sp.current_user_saved_tracks(limit=OBJECTS_PER_TIME, offset=offset)
@@ -357,6 +375,7 @@ def getAllUserObjects(sp, userObject, starting_offset=0, timeout=None):
             return []
 
         if len(SPObjects["items"]) == 0:
+            completed = True
             break
         for item in SPObjects["items"]:
 
@@ -369,7 +388,7 @@ def getAllUserObjects(sp, userObject, starting_offset=0, timeout=None):
 
         offset += OBJECTS_PER_TIME
 
-    return objects
+    return objects, completed
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=PORT_NUMBER, debug=True)
