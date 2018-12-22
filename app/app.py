@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, Response
 import spotipy, os, algs
 from spotipy import oauth2
 from Song import Song, create_song_obj_from_track_dict
@@ -6,6 +6,7 @@ from Playlist import Playlist, create_playlist_obj_from_dict
 from forms import SelectForm
 from requests import ConnectionError , Timeout
 from werkzeug.exceptions import HTTPException
+import time
 
 app = Flask(__name__)
 
@@ -17,7 +18,7 @@ PORT_NUMBER = int(os.environ.get('PORT', 8888))
 SPOTIPY_CLIENT_ID = '883896384d0c4d158bab154c01de29db'
 SPOTIPY_CLIENT_SECRET = '37443ee0c0404c44b755f3ed97c48493'
 
-PRODUCTION = True
+PRODUCTION = False
 
 if PRODUCTION:
     SPOTIPY_REDIRECT_URI1 = 'https://compatify.herokuapp.com/callback1'
@@ -107,21 +108,35 @@ def loadingPlaylists():
 @app.route('/playlists')
 def playlists():
     user = request.args.get("user")
-    try:
+    sp = getSpotifyClient(user)
 
-        sp = getSpotifyClient(user)
+    if user == 1:
+        message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
+    else:
+        message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
 
-        playlists = getAllUserObjects(sp, "playlists")
+    def get_playlists():
+    #def get_playlists(template_name, **context):
+        # app.update_template_context(context)
+        # t = app.jinja_env.get_template(template_name)
+        # rv = t.stream(context)
+        # rv.enable_buffering(5)
+        # return rv
 
+        print ('1')
+        yield 'temp loading page'
+        # yield render_template("loading.html", message=message,
+                                # user=user, url="/playlists")   # notice that we are yielding something as soon as possible
+        print ('2')
+        playlists = getAllUserObjects(sp, "playlists", timeout=3)
+        print ('3')
         SONG_SOURCES_DICT[int(user)] = playlists
         url = "/select?user=" + user
 
-        return redirect(url)
-
-    except Timeout:
-        message = "HTTP Timeout loading playlist options. Please try again or \
-                   use saved songs only."
-        return render_template("error.html", message=message)
+        yield ('<script>window.location.replace("' + url + '");</script>')
+    return Response(get_playlists(), mimetype='text/html')
+    #return Response(get_playlists('loading.html', message=message,
+                                # user=user, url="/select"))
 
 @app.route('/select', methods = ['GET', 'POST'])
 def select():
@@ -167,6 +182,7 @@ def select():
 
 @app.route('/getSongs/<source>')
 def getSongs(source):
+    start = time.time()
     user = request.args.get("user")
     try:
         sp = getSpotifyClient(user)
@@ -295,7 +311,7 @@ def handle_error(e):
     elif isinstance(e, KeyError):
         message = "The application is missing session data due to an unexpected \
                    redirect. Please start again from the beginning."
-    elif isinstance(e, TimeoutError):
+    elif isinstance(e, Timeout):
         message = "HTTP timeout error. Please check your network connection and \
                   try again."
     else:
@@ -316,12 +332,17 @@ def getSpotifyClient(user):
 """ Either get all of a user's saved tracks or saved playlists.
 
     """
-def getAllUserObjects(sp, userObject):
+def getAllUserObjects(sp, userObject, starting_offset=0, timeout=None):
+    start = time.time()
+
     objects = []
     OBJECTS_PER_TIME = 50
-    offset=0
+    offset=starting_offset
 
     while True:
+        # if the request is taking too long, stop this function
+        if timeout and (time.time() - start) > timeout:
+            return objects
 
         if userObject == "tracks":
             SPObjects = sp.current_user_saved_tracks(limit=OBJECTS_PER_TIME, offset=offset)
