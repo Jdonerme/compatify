@@ -35,3 +35,6 @@
     display: block;
     margin: 0 auto;
 }
+.compatify_btn {
+    border-radius: 24px;
+}
