@@ -1,4 +1,6 @@
-from flask import Flask, render_template, request, redirect, url_for, session, Response
+from flask import (
+    Flask, render_template, request, redirect, url_for, session, Response,
+    stream_with_context, render_template_string)
 import spotipy, os, algs
 from spotipy import oauth2
 from Song import Song, create_song_obj_from_track_dict
@@ -116,39 +118,26 @@ def playlists():
         message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
 
     def get_playlists():
-    #def get_playlists(template_name, **context):
-        # app.update_template_context(context)
-        # t = app.jinja_env.get_template(template_name)
-        # rv = t.stream(context)
-        # rv.enable_buffering(5)
-        # return rv
+
         complete_playlist_list = []
-
-        print ('1')
-        yield 'temp loading page'
-        # yield render_template("loading.html", message=message,
-                                # user=user, url="/playlists")   # notice that we are yielding something as soon as possible
-        print ('2')
-
+        template = 'loading.html'
+        context = {'user': user, 'message': message, 'url': '/select'}
+        yield render_template(template, **context)
         while True:
+
             playlists, completed = getAllUserObjects(sp, "playlists",
                                         starting_offset=len(complete_playlist_list),
                                         timeout=3)
             complete_playlist_list += playlists
+
             if completed:
                 break
             else:
-                yield "<br>"
-                yield "Still loading..."
-        yield "done loading"
-        print ('done loading')
-        SONG_SOURCES_DICT[int(user)] = complete_playlist_list
-        url = "/select?user=" + user
+                yield '<p style="display:none;"></p>'
 
-        yield ('<script>window.location.replace("' + url + '");</script>')
-    return Response(get_playlists(), mimetype='text/html')
-    #return Response(get_playlists('loading.html', message=message,
-                                # user=user, url="/select"))
+        SONG_SOURCES_DICT[int(user)] = complete_playlist_list
+
+    return Response(stream_with_context(get_playlists()))
 
 @app.route('/select', methods = ['GET', 'POST'])
 def select():
