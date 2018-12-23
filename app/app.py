@@ -20,7 +20,7 @@ PORT_NUMBER = int(os.environ.get('PORT', 8888))
 SPOTIPY_CLIENT_ID = '883896384d0c4d158bab154c01de29db'
 SPOTIPY_CLIENT_SECRET = '37443ee0c0404c44b755f3ed97c48493'
 
-PRODUCTION = False
+PRODUCTION = True
 
 if PRODUCTION:
     SPOTIPY_REDIRECT_URI1 = 'https://compatify.herokuapp.com/callback1'
@@ -223,7 +223,8 @@ def comparison():
     tracks2 = TRACKS_DICT[2]
 
     if tracks1 == [] or tracks2 == []:
-        intersection_songs, intersection_playlist, top5artists = [], [], []
+        intersection_songs, top5artists = [], []
+        intersection_playlist_uris, intersection_playlist_names = [], []
         score, intersection_size = 0, 0
     else:
 
@@ -234,13 +235,16 @@ def comparison():
 
         top5artists = algs.topNArtists(intersection_songs, 5)
 
+        intersection_playlist_names = algs.getInformation(intersection_songs, 'name')
+
         # filter out local tracks before making the shared playlist since they
         # cannot be included by spotify api.
         intersection_songs = list(filter(lambda song: not song.local, intersection_songs))
 
-        intersection_playlist = algs.getInformation(intersection_songs, 'uri')
+        intersection_playlist_uris = algs.getInformation(intersection_songs, 'uri')
 
-    INTERSECTION_PLAYLIST["session"] = intersection_playlist
+    INTERSECTION_PLAYLIST["uris"] = intersection_playlist_uris
+    INTERSECTION_PLAYLIST["names"] = intersection_playlist_names
 
     return render_template("last.html", score=int(score),
                             count=intersection_size, artists=top5artists,
@@ -253,7 +257,8 @@ def success():
     token2 = session["TOKEN2"]
     access_token1 = token1["access_token"]
     access_token2 = token2["access_token"]
-    intersection_songs = INTERSECTION_PLAYLIST["session"]
+    intersection_songs = INTERSECTION_PLAYLIST["uris"]
+    intersection_names = INTERSECTION_PLAYLIST["names"]
 
     session.clear()
 
@@ -290,7 +295,13 @@ def success():
             break
         else:
             break
-    return render_template("success.html")
+    # if not all songs have uris and can be included (i.e. if there were local tracks)
+    if len(intersection_names) != len(intersection_songs):
+        warning = "Warning: matching local tracks were found that were unable to be included in the playlist."
+    else:
+        warning = ''
+
+    return render_template("success.html", warning=warning)
 
 @app.errorhandler(Exception)
 def handle_error(e):
