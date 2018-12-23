@@ -20,7 +20,7 @@ PORT_NUMBER = int(os.environ.get('PORT', 8888))
 SPOTIPY_CLIENT_ID = '883896384d0c4d158bab154c01de29db'
 SPOTIPY_CLIENT_SECRET = '37443ee0c0404c44b755f3ed97c48493'
 
-PRODUCTION = False
+PRODUCTION = True
 
 if PRODUCTION:
     SPOTIPY_REDIRECT_URI1 = 'https://compatify.herokuapp.com/callback1'
@@ -185,44 +185,38 @@ def select():
 def getSongs(source):
     start = time.time()
     user = request.args.get("user")
-    try:
-        sp = getSpotifyClient(user)
-        songs = []
 
-        # If playlist user was not selected, the only song source is the saved tracks
+    sp = getSpotifyClient(user)
+    songs = []
+
+    # If playlist user was not selected, the only song source is the saved tracks
+    if not source == "playlists":
+        song_sources = ['saved']
+    else:
+        song_sources = SONG_SOURCES_DICT[int(user)]
+
+    # if the user wants to include saved songs
+    if song_sources[0] == "saved":
+        # getting the saved tracks uses a different function than getting playlists
+        song_sources = song_sources[1:]
+        songs, completed = getAllUserObjects(sp, "tracks")
+
+    for playlist in song_sources:
+        songs += playlist.tracks
+
+    TRACKS_DICT[int(user)] = songs
+
+    if user == '1':
+        other_user = '2'
+        sp = getSpotifyClient(other_user)
         if not source == "playlists":
-            song_sources = ['saved']
+            message = "Now Loading %s's Saved Songs..." % sp.me()["display_name"]
+            return render_template("loading.html", message=message, user=other_user,
+                                url="/getSongs/saved")
         else:
-            song_sources = SONG_SOURCES_DICT[int(user)]
+            return redirect(url_for('loadingPlaylists') +"?user=" + other_user)
 
-        # if the user wants to include saved songs
-        if song_sources[0] == "saved":
-            # getting the saved tracks uses a different function than getting playlists
-            song_sources = song_sources[1:]
-            songs, completed = getAllUserObjects(sp, "tracks")
-
-        for playlist in song_sources:
-            songs += playlist.tracks
-
-        TRACKS_DICT[int(user)] = songs
-
-        if user == '1':
-            other_user = '2'
-            sp = getSpotifyClient(other_user)
-            if not source == "playlists":
-                message = "Now Loading %s's Saved Songs..." % sp.me()["display_name"]
-                return render_template("loading.html", message=message, user=other_user,
-                                    url="/getSongs/saved")
-            else:
-                return redirect(url_for('loadingPlaylists') +"?user=" + other_user)
-
-        return redirect(url_for('comparison'))
-
-    except Timeout:
-        message = "HTTP timeout loading songs. Please try again or use a source \
-                   with fewer songs"
-
-        return render_template("error.html", message=message)
+    return redirect(url_for('comparison'))
 
 
 @app.route('/comparison')
