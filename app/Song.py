@@ -86,10 +86,10 @@ def take_artists_from_song_name(name, artist_set):
 
     """
 
-def create_song_obj_from_track_dict(sp, track):
+def create_song_obj_from_track_dict(sp, track, local=False):
     return Song(sp, track["uri"], track["name"], track["artists"][0]["name"],
             map(lambda x: x["name"], track["artists"][1:]),
-            track["album"]["name"], track["duration_ms"])
+            track["album"]["name"], track["duration_ms"], local)
 
 
 """ A object to hold necessary song fields.
@@ -106,10 +106,11 @@ def create_song_obj_from_track_dict(sp, track):
                 versions of the same song
 
     artist_set: A set containing all the artists that are credited on the song
+    local: Boolean to indicate whether or not a track is a local track
 
     """
 class Song(object):
-    def __init__(self, sp, uri, name, artist, features, album, duration):
+    def __init__(self, sp, uri, name, artist, features, album, duration, local=False):
         self.sp = sp
         self.uri = uri
         self.name = name
@@ -117,6 +118,7 @@ class Song(object):
         self.featured_artists = features
         self.album = album
         self.duration = duration
+        self.local = local
 
         self.artist_set = set(list(map(simple_string, [artist] + features)))
         self.set_identifier_and_match_name()
@@ -124,7 +126,7 @@ class Song(object):
         # save some attributes in a dictionary for access with [] notation
         self.attributes = { "name": self.name, "uri": self.uri, "artist": 
               self.artist, "album": self.album, "duration": self.duration,
-              "featured_artists": self.featured_artists,
+              "featured_artists": self.featured_artists, "local": self.local,
               "identifier": self.identifier
         }
 

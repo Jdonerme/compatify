@@ -56,16 +56,19 @@ class Playlist(object):
     def tracks(self):
         song_objects = []
         results = self.sp.user_playlist_tracks(self.username, self.id,
-                                   fields="items.track(uri,name,artists(name),album(name),duration_ms),next")
+                                   fields="items(is_local,track(uri,name,artists(name),album(name),duration_ms)),next")
 
         for item in results["items"]:
             track = item['track']
-            song_objects.append (create_song_obj_from_track_dict(self.sp, track))
+            local = item['is_local']
+            song_objects.append (create_song_obj_from_track_dict(self.sp, track, local))
+
         while results['next']:
             results = self.sp.next(results)
             for item in results["items"]:
                 track = item['track']
-                song_objects.append (create_song_obj_from_track_dict(self.sp, track))
+                local = item['is_local']
+                song_objects.append (create_song_obj_from_track_dict(self.sp, track, local))
             song_objects.append (create_song_obj_from_track_dict(self.sp, track))
 
         return song_objects
