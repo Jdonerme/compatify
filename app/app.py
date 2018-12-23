@@ -74,7 +74,6 @@ def callback1():
 
 @app.route('/callback2')
 def callback2():
-    user = 2
     code = request.args.get('code')
     state = request.args.get('state')
 
@@ -83,8 +82,7 @@ def callback2():
         session["TOKEN2"] = token
 
         access_token2 = token["access_token"]
-        sp = getSpotifyClient(user)
-        message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
+
         return redirect(url_for('options'))
 
     else:
