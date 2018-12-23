@@ -20,7 +20,7 @@ PORT_NUMBER = int(os.environ.get('PORT', 8888))
 SPOTIPY_CLIENT_ID = '883896384d0c4d158bab154c01de29db'
 SPOTIPY_CLIENT_SECRET = '37443ee0c0404c44b755f3ed97c48493'
 
-PRODUCTION = True
+PRODUCTION = False
 
 if PRODUCTION:
     SPOTIPY_REDIRECT_URI1 = 'https://compatify.herokuapp.com/callback1'
@@ -223,21 +223,22 @@ def comparison():
     tracks2 = TRACKS_DICT[2]
 
     if tracks1 == [] or tracks2 == []:
-        intersection_songs = []
-        intersection_playlist = []
-        score = 0
-        top5artists = []
+        intersection_songs, intersection_playlist, top5artists = [], [], []
+        score, intersection_size = 0, 0
     else:
 
         intersection_songs = algs.intersection(tracks1, tracks2)
-
-        intersection_playlist = algs.getInformation(intersection_songs, 'uri')
+        intersection_size = len(intersection_songs)
 
         score = algs.compatabilityIndex(tracks1, tracks2, intersection_songs)
 
         top5artists = algs.topNArtists(intersection_songs, 5)
-    
-    intersection_size = len(intersection_playlist)
+
+        # filter out local tracks before making the shared playlist since they
+        # cannot be included by spotify api.
+        intersection_songs = list(filter(lambda song: not song.local, intersection_songs))
+
+        intersection_playlist = algs.getInformation(intersection_songs, 'uri')
 
     INTERSECTION_PLAYLIST["session"] = intersection_playlist
 
@@ -303,7 +304,10 @@ def handle_error(e):
                problem persists, try selecting sources with fewer songs."
     elif isinstance(e, KeyError):
         message = "The application is missing session data due to an unexpected \
-                   redirect. Please start again from the beginning."
+                   redirect. Please start again from the beginning.\n"
+        message += '\n'
+        message += str(e.message)
+
     elif isinstance(e, Timeout):
         message = "HTTP timeout error. Please check your network connection and \
                   try again."
