@@ -1,9 +1,14 @@
-from flask import Flask, render_template, request, redirect, url_for, session
-import spotipy
+from flask import (
+    Flask, render_template, request, redirect, url_for, session, Response,
+    stream_with_context, render_template_string)
+import spotipy, os, algs
 from spotipy import oauth2
-import os
-import algs
-from Song import Song
+from Song import Song, create_song_obj_from_track_dict
+from Playlist import Playlist, create_playlist_obj_from_dict
+from forms import SelectForm
+from requests import ConnectionError , Timeout
+from werkzeug.exceptions import HTTPException
+import time
 
 app = Flask(__name__)
 
@@ -35,8 +40,12 @@ sp_oauth1 = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIP
 sp_oauth2 = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIPY_REDIRECT_URI2,state=STATE2,scope=SCOPE,cache_path=CACHE,show_dialog=True)
 
 
-INTERSECTION_DICT = {}
+INTERSECTION_PLAYLIST = {}
+
+# list of the tracks and playlists for each user where the key is the integer user id
 TRACKS_DICT = {}
+SONG_SOURCES_DICT = {}
+SELECTED = {}
 
 
 # VIEWS
@@ -65,7 +74,6 @@ def callback1():
 
 @app.route('/callback2')
 def callback2():
-
     code = request.args.get('code')
     state = request.args.get('state')
 
@@ -75,61 +83,173 @@ def callback2():
 
         access_token2 = token["access_token"]
 
-        sp2 = spotipy.Spotify(auth=access_token2)
-        message = "Loading %s's Songs..." % sp2.me()["display_name"]
-        return render_template("loading.html",
-                                message=message, user=2)
+        return redirect(url_for('options'))
 
     else:
         return redirect(url_for('index'))
 
-@app.route('/getSongs')
-def getSongs():
-    user = int(request.args.get("user"))
-    token1 = session["TOKEN1"]
-    access_token1 = token1["access_token"]
+@app.route('/options')
+def options():
+    return render_template("options.html")
 
-    token2 = session["TOKEN2"]
-    access_token2 = token2["access_token"]
+@app.route('/loadingPlaylists')
+def loadingPlaylists():
+    user = request.args.get("user")
+    sp = getSpotifyClient(user)
 
-    if user == 2:
+    if user == 1:
+        message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
+    else:
+        message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
+    return render_template("loading.html", message=message,
+                                user=user, url="/playlists")
+    return render_template("error.html")
 
-        sp2 = spotipy.Spotify(auth=access_token2)
-        tracks2 = getAllTracks(sp2)
-        TRACKS_DICT[2] = tracks2
+@app.route('/playlists')
+def playlists():
+    user = request.args.get("user")
+    sp = getSpotifyClient(user)
 
-        sp1 = spotipy.Spotify(auth=access_token1)
-        message = "Now Loading %s's Songs..." % sp1.me()["display_name"]
+    if user == 1:
+        message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
+    else:
+        message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
 
-        return render_template("loading.html", 
-                                message=message, user=1)
+    def get_playlists():
 
-    sp1 = spotipy.Spotify(auth=access_token1)
-    tracks1 = getAllTracks(sp1)
+        complete_playlist_list = []
+        template = 'loading.html'
+        context = {'user': user, 'message': message, 'url': '/select'}
+        yield render_template(template, **context)
+        while True:
 
-    TRACKS_DICT[1] = tracks1
+            playlists, completed = getAllUserObjects(sp, "playlists",
+                                        starting_offset=len(complete_playlist_list),
+                                        timeout=3)
+            complete_playlist_list += playlists
+
+            if completed:
+                break
+            else:
+                yield '<p style="display:none;"></p>'
+
+        SONG_SOURCES_DICT[int(user)] = complete_playlist_list
+
+    return Response(stream_with_context(get_playlists()))
+
+@app.route('/select', methods = ['GET', 'POST'])
+def select():
+    MAX_SONGS_TO_DISPLAY = 15
+    user = request.args.get("user")
+    url = "/getSongs/playlists"
+
+    sp = getSpotifyClient(user)
+    name = sp.me()["display_name"]
+    message = "Loading %s's Songs From the Chosen Sources..." % name
+
+
+    playlists = SONG_SOURCES_DICT[int(user)]
+    source_choices = list(map(lambda x : (x.id, x.name), playlists))
+    source_choices.sort(key = lambda x : x[1].lower())
+    source_choices = [("saved", "Your Saved Songs")] + source_choices
+
+    form = SelectForm()
+    form.response.choices =  source_choices
+    if(form.is_submitted()):
+
+        selection = form.data["response"]
+        selected_objects = []
+
+        # save the selected playlists for the user, but don't count the saved
+        # songs as playlist if it's chosen to be included.
+        if selection[0] == "saved":
+            selected_objects.append(selection[0])
+            selection = selection[1:]
+
+        selected_objects += [p for p in playlists if p.id in selection]
+        SONG_SOURCES_DICT[int(user)] = selected_objects
+
+        return render_template("loading.html", message=message, user=user,
+                                url=url)
+
+    # We don't the playlist selection drop down to be too big if there are a lot of
+    # playlists.
+    display_size = min(MAX_SONGS_TO_DISPLAY, len(source_choices))
+    return render_template("select.html",
+                            message=message, user=user, form = form, name=name,
+                            display_size=display_size)
+
+@app.route('/getSongs/<source>')
+def getSongs(source):
+    start = time.time()
+    user = request.args.get("user")
+
+    sp = getSpotifyClient(user)
+    songs = []
+
+    # If playlist user was not selected, the only song source is the saved tracks
+    if not source == "playlists":
+        song_sources = ['saved']
+    else:
+        song_sources = SONG_SOURCES_DICT[int(user)]
+
+    # if the user wants to include saved songs
+    if song_sources[0] == "saved":
+        # getting the saved tracks uses a different function than getting playlists
+        song_sources = song_sources[1:]
+        songs, completed = getAllUserObjects(sp, "tracks")
+
+    for playlist in song_sources:
+        songs += playlist.tracks
+
+    TRACKS_DICT[int(user)] = songs
+
+    if user == '1':
+        other_user = '2'
+        sp = getSpotifyClient(other_user)
+        if not source == "playlists":
+            message = "Now Loading %s's Saved Songs..." % sp.me()["display_name"]
+            return render_template("loading.html", message=message, user=other_user,
+                                url="/getSongs/saved")
+        else:
+            return redirect(url_for('loadingPlaylists') +"?user=" + other_user)
+
+    return redirect(url_for('comparison'))
+
+
+@app.route('/comparison')
+def comparison():
+    tracks1 = TRACKS_DICT[1]
     tracks2 = TRACKS_DICT[2]
 
     if tracks1 == [] or tracks2 == []:
-        intersection_songs = []
-        intersection_playlist = []
-        score = 0
-        top5artists = []
+        intersection_songs, top5artists = [], []
+        intersection_playlist_uris, intersection_playlist_names = [], []
+        score, intersection_size = 0, 0
     else:
 
         intersection_songs = algs.intersection(tracks1, tracks2)
-
-        intersection_playlist = algs.getInformation(intersection_songs, 'uri')
+        intersection_size = len(intersection_songs)
 
         score = algs.compatabilityIndex(tracks1, tracks2, intersection_songs)
 
         top5artists = algs.topNArtists(intersection_songs, 5)
-    
-    intersection_size = len(intersection_playlist)
 
-    INTERSECTION_DICT[access_token1 + "_" + access_token2] = intersection_playlist
+        intersection_playlist_names = algs.getInformation(intersection_songs, 'name')
 
-    return render_template("last.html", score=int(score), count=intersection_size, artists=top5artists, success_page=url_for('success'))
+        # filter out local tracks before making the shared playlist since they
+        # cannot be included by spotify api.
+        intersection_songs = list(filter(lambda song: not song.local, intersection_songs))
+
+        intersection_playlist_uris = algs.getInformation(intersection_songs, 'uri')
+
+    INTERSECTION_PLAYLIST["uris"] = intersection_playlist_uris
+    INTERSECTION_PLAYLIST["names"] = intersection_playlist_names
+
+    return render_template("last.html", score=int(score),
+                            count=intersection_size, artists=top5artists,
+                            success_page=url_for('success'))
+
 
 @app.route('/success')
 def success():
@@ -137,10 +257,10 @@ def success():
     token2 = session["TOKEN2"]
     access_token1 = token1["access_token"]
     access_token2 = token2["access_token"]
-    session.clear()
+    intersection_songs = INTERSECTION_PLAYLIST["uris"]
+    intersection_names = INTERSECTION_PLAYLIST["names"]
 
-    intersection_songs = INTERSECTION_DICT[access_token1 + "_" + access_token2]
-    del INTERSECTION_DICT[access_token1 + "_" + access_token2]
+    session.clear()
 
     sp1 = spotipy.Spotify(auth=access_token1)
     sp2 = spotipy.Spotify(auth=access_token2)
@@ -175,33 +295,96 @@ def success():
             break
         else:
             break
-    return render_template("success.html")
+    # if not all songs have uris and can be included (i.e. if there were local tracks)
+    if len(intersection_names) != len(intersection_songs):
+        warning = "Warning: matching local tracks were found that were unable to be included in the playlist."
+    else:
+        warning = ''
+
+    return render_template("success.html", warning=warning)
+
+@app.errorhandler(Exception)
+def handle_error(e):
+    code = 500
+    if isinstance(e, HTTPException):
+        code = e.code
+
+    elif isinstance(e, ConnectionError):
+        message="There was en error connecting to the Spotify API. \
+               Please check your network connection and try again. If the \
+               problem persists, try selecting sources with fewer songs."
+    elif isinstance(e, KeyError):
+        message = "The application is missing session data due to an unexpected \
+                   redirect. Please start again from the beginning.\n"
+        message += '\n'
+        message += str(e.message)
+
+    elif isinstance(e, Timeout):
+        message = "HTTP timeout error. Please check your network connection and \
+                  try again."
+    else:
+        message = str(type(e)) + ":\t" + e.message
+
+    return render_template("error.html", message=message)
 
 
 # Methods
 
-def getAllTracks(sp):
-    tracks = []
-    SONGS_PER_TIME = 50
-    offset=0
+def getSpotifyClient(user):
+    key = "TOKEN" + str(user)
+    access_token = session[key]["access_token"]
+    sp = spotipy.Spotify(auth=access_token)
+    return sp
+
+
+""" Either get all of a user's saved tracks or saved playlists.
+
+    returns:
+        objects [arr]: array of the objecst requset
+        completed: whether all of the objects that exit are returned. If
+            completed is false, the call was terminated early to avoid a timeout.
+
+    """
+def getAllUserObjects(sp, userObject, starting_offset=0, timeout=None):
+    start = time.time()
+
+    objects = []
+    OBJECTS_PER_TIME = 50
+    offset=starting_offset
+    completed = False
 
     while True:
-        SPTracks = sp.current_user_saved_tracks(limit=SONGS_PER_TIME, offset=offset) 
+        # if the request is taking too long, stop this function
+        if timeout and (time.time() - start) > timeout:
+            return objects, completed
 
-        if len(SPTracks["items"]) == 0:
+        if userObject == "tracks":
+            SPObjects = sp.current_user_saved_tracks(limit=OBJECTS_PER_TIME, offset=offset)
+
+        elif userObject == "playlists" :
+            #SPObjects = sp.current_user_playlists(limit=OBJECTS_PER_TIME, offset=offset)
+            user = sp.me()["id"]
+            SPObjects = sp.user_playlists(user, limit=OBJECTS_PER_TIME, offset=offset)
+        else:
+            raise TypeError ("getAllUserObjects is expecting to get only either"
+                             " saved_tracks or playlists")
+            return []
+
+        if len(SPObjects["items"]) == 0:
+            completed = True
             break
-        for song in SPTracks["items"]:
-            track = song["track"]
+        for item in SPObjects["items"]:
 
-            song_item = \
-                Song(sp, track["uri"], track["name"], track["artists"][0]["name"],
-                     map(lambda x: x["name"], track["artists"][1:]), 
-                     track["album"]["name"], track["duration_ms"])
-            tracks.append(song_item)
+            if userObject == "tracks":
+                track = item["track"]
+                created_item = create_song_obj_from_track_dict(sp, track)
+            else: # userObject == "playlist"
+                created_item = create_playlist_obj_from_dict(sp, item)
+            objects.append(created_item)
 
-        offset += SONGS_PER_TIME
+        offset += OBJECTS_PER_TIME
 
-    return tracks
+    return objects, completed
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=PORT_NUMBER, debug=True)

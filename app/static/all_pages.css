@@ -9,7 +9,7 @@
     color: white;
 }
 .overlay {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
@@ -19,7 +19,7 @@
     z-index: -1;
 }
 .bg {
-    position: absolute;
+    position: fixed;
     top: 0px;
     left: 0px;
     width:100%;
@@ -34,4 +34,7 @@
 .center {
     display: block;
     margin: 0 auto;
+}
+.compatify_btn {
+    border-radius: 24px;
 }

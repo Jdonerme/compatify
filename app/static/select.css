@@ -1,0 +1,35 @@
+
+
+.select_container {
+
+}
+.caption {
+    color: white;
+    font-family: "Lato", sans-serif;
+    font-size: 24px;
+}
+
+.playlist_list {
+
+}
+#logo {
+    height: auto;
+    width: auto;
+    max-height: 150px;
+    max-width: 150px;
+}
+
+select {
+	font-family: "Lato", sans-serif;
+    font-size: 16px;
+    color: white;
+    background-color: #5cb85c;
+    overflow-x: auto;
+    /*height: 80% !important;*/
+}
+
+option {
+	margin-top: 2%;
+	margin-bottom: 2%;
+	margin-left: 3%;
+}
