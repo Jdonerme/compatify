@@ -45,8 +45,11 @@ Logic & Algorithms: Joseph Donermeyer
 
 Local Use
 -----------
-From the app folder, run 
+To install requirements, run
+pip install -r requirements.txt
+
+Then, from the app folder, run
 python app.py
 
-The production variable in app.py needs to be set to True. The service will run
+For local use, the production variable in app.py needs to be set to False. The service will run
 on port 8888

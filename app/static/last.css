@@ -1,0 +1,27 @@
+.title {
+    font-size: 50px;
+    margin-top: 2%;
+    margin-bottom: 2%;
+    font-family: "Merienda One", sans-serif;
+}
+.liquidFillGaugeText { 
+    font-family: Helvetica; font-weight: bold; 
+    margin-top: 0%;
+}
+.caption {
+    font-size: 25px;
+}
+.button_text {
+    font-size: 20px;
+}
+.artist {
+    color: white;
+}
+.makeplaylist {
+    width: 25%;
+    margin-top:0%;
+}
+
+.artistsDiv {
+    margin-bottom: 0%;
+}

@@ -17,34 +17,8 @@
         <script src={{ url_for('static', filename='liquidFillGauge.js') }} language="JavaScript"></script>
         
         <link rel="stylesheet" href={{ url_for('static', filename='all_pages.css') }}>
-        <style>
-            .title {
-                font-size: 50px;
-                margin-top: 2%;
-                margin-bottom: 2%;
-                font-family: "Merienda One", sans-serif;
-                
-            }
-            .liquidFillGaugeText { 
-                font-family: Helvetica; font-weight: bold; 
-                margin-top: 0%;
-            }
-            .caption {
-                font-size: 25px;
-            }
-            .artist {
-                color: white;
-            }
-            .makeplaylist {
-                width: 25%;
-                margin-top:0%;
-            }
-
-            .artistsDiv {
-                margin-bottom: 0%;
-            }
-
-        </style>
+        <link rel="stylesheet" href={{ url_for('static', filename='first.css') }}>
+        <link rel="stylesheet" href={{ url_for('static', filename='last.css') }}>
     </head>
     
     <body>
@@ -88,9 +62,12 @@
             {% endfor %}
         </div>
         
-            
-            <a href={{ success_page }} class="btn btn-success center-block makeplaylist">Make Playlist of Shared Songs </a>
-
+         <br>
+         <br>
+         <form><div class="text-center"><a href={{ success_page }} class="btn btn-success compatify_btn"><div class="button_text">Make Playlist of Shared Songs</div> </a></div></form>
+        <br>
+        <br>
+        <form><div class="text-center"><a type="button" class="btn btn-success compatify_btn" href="/"><div class="button_text">Go Back to Start</div></a></div></form>
     </body>    
 
 </html>

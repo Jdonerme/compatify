@@ -71,11 +71,25 @@ def take_artists_from_song_name(name, artist_set):
     featured_artists = song_name[start_artist_index:end_artist_index]
 
     featured_artists_list = re.split(" & | and |, ", featured_artists)
-    artist_set |= set(featured_artists_list)
+    featured_artists_set = set(list(map(simple_string, featured_artists_list)))
+    artist_set |= featured_artists_set
 
     # remove the features from the title since they're not always there
     song_name = song_name[:feat_index]
     return song_name, artist_set
+
+""" Create a Song Object in a useful format using the raw track information
+    returned by the Spotify API.
+
+    sp: spotify client object that was used to fetch the track
+    track (dict): raw track object returned from spotipy.
+
+    """
+
+def create_song_obj_from_track_dict(sp, track, local=False):
+    return Song(sp, track["uri"], track["name"], track["artists"][0]["name"],
+            map(lambda x: x["name"], track["artists"][1:]),
+            track["album"]["name"], track["duration_ms"], local)
 
 
 """ A object to hold necessary song fields.
@@ -92,10 +106,11 @@ def take_artists_from_song_name(name, artist_set):
                 versions of the same song
 
     artist_set: A set containing all the artists that are credited on the song
+    local: Boolean to indicate whether or not a track is a local track
 
     """
 class Song(object):
-    def __init__(self, sp, uri, name, artist, features, album, duration):
+    def __init__(self, sp, uri, name, artist, features, album, duration, local=False):
         self.sp = sp
         self.uri = uri
         self.name = name
@@ -103,6 +118,7 @@ class Song(object):
         self.featured_artists = features
         self.album = album
         self.duration = duration
+        self.local = local
 
         self.artist_set = set(list(map(simple_string, [artist] + features)))
         self.set_identifier_and_match_name()
@@ -110,7 +126,7 @@ class Song(object):
         # save some attributes in a dictionary for access with [] notation
         self.attributes = { "name": self.name, "uri": self.uri, "artist": 
               self.artist, "album": self.album, "duration": self.duration,
-              "featured_artists": self.featured_artists,
+              "featured_artists": self.featured_artists, "local": self.local,
               "identifier": self.identifier
         }
 
@@ -135,8 +151,9 @@ class Song(object):
         # remove any version specific details from the song title
         song_name = get_simplified_song_name(song_name, DIFFERENT_VERSION_KEY_WORDS)
 
+        # include all artists in identifier in case they are listed in a different order
         identifier = simple_string(song_name) + " - " + \
-                     simple_string(self.artist)
+                     " - ".join(self.artist_set)
         self.identifier = identifier
 
 
@@ -181,7 +198,12 @@ class Song(object):
         artist = self.artist.encode('utf-8').strip()
         album = self.album.encode('utf-8').strip()
         uri = self.uri.encode('utf-8').strip()
-        return "Title: %s \n" \
-               "artist: %s \n" \
-               "album: %s\n" \
-               "uri: %s \n"  % (name, artist, album, uri)
+        return (
+            "-" * 50 + "\n"
+            "Title: %s \n" \
+            "Artist: %s \n" \
+            "Album: %s\n" \
+            "Uri: %s \n"  % (name, artist, album, uri) +
+            "-" * 50 + "\n"
+            )
+        return

@@ -1,0 +1,12 @@
+.title {
+    font-size: 50px;
+}
+.options_buttons {
+	/*display: flex;*/
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+/*.options_button {
+	margin: 5px;
+}*/
