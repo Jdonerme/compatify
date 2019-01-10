@@ -5,6 +5,7 @@
 	<link rel="stylesheet" href={{ url_for('static', filename='all_pages.css') }}>
   <link rel="stylesheet" href={{ url_for('static', filename='select.css') }}>
   <link href='https://fonts.googleapis.com/css?family=Merienda+One' rel='stylesheet' type='text/css'>
+  <script src={{ url_for('static', filename='select.js') }} language="JavaScript"></script>
 </head>
 <body>
 
@@ -20,6 +21,11 @@
   <form action="" method="post" name="playlist_list">
         {{ form.hidden_tag() }}
 
+        <div class="text-center">
+              <input id="alpha" type="button" class="btn btn-success compatify_btn sort_option"
+              value="Sort By Name">
+            </div>
+        <br>
         <div class="playlist_list text-center">
             {{form.response(**{"size": display_size})}}
             <br>
@@ -31,6 +37,12 @@
 
         </div>
   </form>
+  <script type="text/javascript">
+    var alpha = document.getElementById("alpha");
+    alpha.addEventListener('click', function(){
+        sortSelect(document.getElementById("response"), "alpha");
+    });
+  </script>
 
 </div>
 </body>
