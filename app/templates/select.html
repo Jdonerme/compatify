@@ -2,35 +2,66 @@
 <head>
 	<title>Compatify</title>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
-	<link rel="stylesheet" href={{ url_for('static', filename='all_pages.css') }}>
+  <link rel="stylesheet" href={{ url_for('static', filename='all_pages.css') }}>
   <link rel="stylesheet" href={{ url_for('static', filename='select.css') }}>
   <link href='https://fonts.googleapis.com/css?family=Merienda+One' rel='stylesheet' type='text/css'>
+  <script src={{ url_for('static', filename='select.js') }} language="JavaScript"></script>
 </head>
 <body>
 
-<img src={{ url_for('static', filename='concert_background.png') }} class="bg">
-<div class="overlay"></div>
-<div class="container">
-<img id="logo" class="center" src={{ url_for('static', filename='twoheadphones.png') }}>
+    <img src={{ url_for('static', filename='concert_background.png') }} class="bg">
+    <div class="overlay"></div>
+    <div class="container">
+        <img id="logo" class="center" src={{ url_for('static', filename='twoheadphones.png') }}>
 
-  <p class="caption" align="center">
-        Select Playlists for {{name}}'s Song Selection.
-  </p>
-    <br>
-  <form action="" method="post" name="playlist_list">
-        {{ form.hidden_tag() }}
+        <p class="caption" align="center">
+            Select Playlists for {{name}}'s Song Selection.
+        </p>
+        <br>
+        <br>
+        <form action="" method="post" name="playlist_list">
+            {{ form.hidden_tag() }}
 
-        <div class="playlist_list text-center">
-            {{form.response(**{"size": display_size})}}
-            <br>
-            <br>
-            <div class="text-center">
-              <input type="submit" class="btn btn-success compatify_btn caption"
-              value="Select">
+            <div class="text-center sort_options">
+                <input id="alpha" type="button" class="btn btn-success compatify_btn sort_option"
+                value="Sort By Name">
+
+                <input id="custom" type="button" class="btn btn-success compatify_btn sort_option"
+                value="Custom Sort">
             </div>
+            <br>
+            <div class="playlist_list text-center">
+                {{form.response(**{"size": display_size})}}
+                <br>
+                <br>
+                <div class="text-center">
+                  <input type="submit" class="btn btn-success compatify_btn caption"
+                  value="Select">
+              </div>
 
-        </div>
-  </form>
+          </div>
+      </form>
+
+      <script type="text/javascript">
+        const originalList = new Array();
+        const selectList = document.getElementById("response");
+
+        for (var i=0;i<selectList.options.length;i++) {
+            originalList[i] = new Array();
+            originalList[i][0] = selectList.options[i].text;
+            originalList[i][1] = selectList.options[i].value;
+        }
+
+        const alpha = document.getElementById("alpha");
+        alpha.addEventListener('click', function(){
+            sortSelect(document.getElementById("response"), "alpha");
+        });
+
+        const custom = document.getElementById("custom");
+        custom.addEventListener('click', function(){
+            replaceSelect(originalList, document.getElementById("response"));
+        });
+    </script>
 
 </div>
 </body>
