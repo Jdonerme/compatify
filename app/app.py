@@ -186,7 +186,7 @@ def select():
 
     # We don't the playlist selection drop down to be too big if there are a lot of
     # playlists.
-    display_size = min(MAX_SONGS_TO_DISPLAY, len(source_choices))
+    display_size = min(MAX_SONGS_TO_DISPLAY, len(source_choices) + 1)
     return render_template("select.html",
                             message=message, user=user, form = form, name=name,
                             display_size=display_size)
@@ -259,7 +259,7 @@ def comparison():
     sp1, sp2 = getSpotifyClient(1), getSpotifyClient(2)
     print ("\n------")
     print ("Compatify run for users %s and %s" % 
-            (sp1.me()["display_name"], None))
+            (sp1.me()["display_name"], sp2.me()["display_name"]))
 
     if tracks1 == [] or tracks2 == []:
         intersection_songs, top5artists = [], []
