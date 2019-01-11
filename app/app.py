@@ -9,10 +9,14 @@ from forms import SelectForm
 from requests import ConnectionError , Timeout
 from werkzeug.exceptions import HTTPException
 import time
+import logging
+
 
 app = Flask(__name__)
 
 app.secret_key = algs.generateRandomString(16)
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 
 # GLOBAL VARIABLES
 
@@ -20,7 +24,7 @@ PORT_NUMBER = int(os.environ.get('PORT', 8888))
 SPOTIPY_CLIENT_ID = '883896384d0c4d158bab154c01de29db'
 SPOTIPY_CLIENT_SECRET = '37443ee0c0404c44b755f3ed97c48493'
 
-PRODUCTION = False
+PRODUCTION = True
 
 if PRODUCTION:
     SPOTIPY_REDIRECT_URI1 = 'https://compatify.herokuapp.com/callback1'
@@ -252,6 +256,10 @@ def getSongs(source):
 def comparison():
     tracks1 = TRACKS_DICT[1]
     tracks2 = TRACKS_DICT[2]
+    sp1, sp2 = getSpotifyClient(1), getSpotifyClient(2)
+    print ("\n------")
+    print ("Compatify run for users %s and %s" % 
+            (sp1.me()["display_name"], None))
 
     if tracks1 == [] or tracks2 == []:
         intersection_songs, top5artists = [], []
@@ -331,7 +339,8 @@ def success():
         warning = "Warning: matching local tracks were found that were unable to be included in the playlist."
     else:
         warning = ''
-
+    print ("Playlist Made for users %s and %s" % 
+            (user_name1, user_name2))
     return render_template("success.html", warning=warning)
 
 @app.errorhandler(Exception)
@@ -418,4 +427,4 @@ def getAllUserObjects(sp, userObject, starting_offset=0, timeout=None):
     return objects, completed
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=PORT_NUMBER, debug=True)
+    app.run(host='0.0.0.0', port=PORT_NUMBER, debug=False)
