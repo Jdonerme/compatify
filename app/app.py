@@ -92,6 +92,15 @@ def callback2():
 def options():
     return render_template("options.html")
 
+@app.route('/songsSelected')
+def songsSelected():
+    user = 1
+    sp = getSpotifyClient(user)
+    message = "Loading %s's Saved Songs..." % sp.me()["display_name"]
+
+    return render_template("loading.html", message=message, user=user,
+                                url="/getSongs/saved")
+
 @app.route('/loadingPlaylists')
 def loadingPlaylists():
     user = request.args.get("user")
@@ -323,7 +332,7 @@ def handle_error(e):
         message = "HTTP timeout error. Please check your network connection and \
                   try again."
     else:
-        message = str(type(e)) + ":\t" + e.message
+        message = str(type(e)) + ":\t" + e.message.decode('utf-8').strip()
 
     return render_template("error.html", message=message)
 
