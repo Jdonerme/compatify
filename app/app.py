@@ -205,23 +205,21 @@ def getSongs(source):
         sp = getSpotifyClient(other_user)
 
         if not source == "playlists":
-            message = "Loading %s's Saved Songs..." % sp.me()["display_name"]
+            message = "Now Loading %s's Saved Songs..." % sp.me()["display_name"]
             context = {'user': other_user, 'message': message, 'url': '/getSongs/saved'}
         else:
-            message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
-            context = {'user': other_user, 'message': message, 'url': '/getSongs/playlists'}
-    else:
-        if not source == "playlists":
-            message = "Now Loading %s's Saved Songs..." % sp.me()["display_name"]
-        else:
             message = "Now Loading %s's Playlist Options..." % sp.me()["display_name"]
+            context = {'user': other_user, 'message': message, 'url': '/loadingPlaylists'}
+    else:
+        sp = getSpotifyClient(user)
+        message = "Comparing Songs..."
 
-        context = {'user': other_user, 'message': message, 'url': url_for('comparison')}
+        context = {'user': '2', 'message': message, 'url': url_for('comparison')}
 
-    def get_songs():
+    def get_songs(user, song_sources):
         sp = getSpotifyClient(user)
         complete_song_list = []
-        
+
         yield render_template(template, **context)
 
         #if the user wants to include saved songs
@@ -247,7 +245,7 @@ def getSongs(source):
         TRACKS_DICT[int(user)] = complete_song_list
         
 
-    return Response(stream_with_context(get_songs()))
+    return Response(stream_with_context(get_songs(user, song_sources)))
 
 
 @app.route('/comparison')
