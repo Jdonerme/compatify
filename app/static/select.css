@@ -2,6 +2,8 @@
 
 .sort_option{
     font-size: 16px;
+    margin-left: 10px;
+    margin-right: 10px;
 }
 .caption {
     color: white;
@@ -9,9 +11,6 @@
     font-size: 24px;
 }
 
-.playlist_list {
-
-}
 #logo {
     height: auto;
     width: auto;

@@ -20,7 +20,7 @@ PORT_NUMBER = int(os.environ.get('PORT', 8888))
 SPOTIPY_CLIENT_ID = '883896384d0c4d158bab154c01de29db'
 SPOTIPY_CLIENT_SECRET = '37443ee0c0404c44b755f3ed97c48493'
 
-PRODUCTION = True
+PRODUCTION = False
 
 if PRODUCTION:
     SPOTIPY_REDIRECT_URI1 = 'https://compatify.herokuapp.com/callback1'
@@ -106,10 +106,10 @@ def loadingPlaylists():
     user = request.args.get("user")
     sp = getSpotifyClient(user)
 
-    if user == 1:
+    if user == '1':
         message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
     else:
-        message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
+        message = "Now Loading %s's Playlist Options..." % sp.me()["display_name"]
     return render_template("loading.html", message=message,
                                 user=user, url="/playlists")
     return render_template("error.html")
@@ -119,10 +119,10 @@ def playlists():
     user = request.args.get("user")
     sp = getSpotifyClient(user)
 
-    if user == 1:
+    if user == '1':
         message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
     else:
-        message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
+        message = "Now Loading %s's Playlist Options..." % sp.me()["display_name"]
 
     def get_playlists():
 
@@ -159,7 +159,6 @@ def select():
 
     playlists = SONG_SOURCES_DICT[int(user)]
     source_choices = list(map(lambda x : (x.id, x.name), playlists))
-    source_choices.sort(key = lambda x : x[1].lower())
     source_choices = [("saved", "Your Saved Songs")] + source_choices
 
     form = SelectForm()
@@ -190,11 +189,7 @@ def select():
 
 @app.route('/getSongs/<source>')
 def getSongs(source):
-    start = time.time()
     user = request.args.get("user")
-
-    sp = getSpotifyClient(user)
-    songs = []
 
     # If playlist user was not selected, the only song source is the saved tracks
     if not source == "playlists":
@@ -202,28 +197,57 @@ def getSongs(source):
     else:
         song_sources = SONG_SOURCES_DICT[int(user)]
 
-    # if the user wants to include saved songs
-    if song_sources[0] == "saved":
-        # getting the saved tracks uses a different function than getting playlists
-        song_sources = song_sources[1:]
-        songs, completed = getAllUserObjects(sp, "tracks")
-
-    for playlist in song_sources:
-        songs += playlist.tracks
-
-    TRACKS_DICT[int(user)] = songs
-
+    # Set where the app should direct after loading all songs
+    template = 'loading.html'
+        
     if user == '1':
         other_user = '2'
         sp = getSpotifyClient(other_user)
+
+        if not source == "playlists":
+            message = "Loading %s's Saved Songs..." % sp.me()["display_name"]
+            context = {'user': other_user, 'message': message, 'url': '/getSongs/saved'}
+        else:
+            message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
+            context = {'user': other_user, 'message': message, 'url': '/getSongs/playlists'}
+    else:
         if not source == "playlists":
             message = "Now Loading %s's Saved Songs..." % sp.me()["display_name"]
-            return render_template("loading.html", message=message, user=other_user,
-                                url="/getSongs/saved")
         else:
-            return redirect(url_for('loadingPlaylists') +"?user=" + other_user)
+            message = "Now Loading %s's Playlist Options..." % sp.me()["display_name"]
 
-    return redirect(url_for('comparison'))
+        context = {'user': other_user, 'message': message, 'url': url_for('comparison')}
+
+    def get_songs():
+        sp = getSpotifyClient(user)
+        complete_song_list = []
+        
+        yield render_template(template, **context)
+
+        #if the user wants to include saved songs
+        if song_sources[0] == "saved":
+            # getting the saved tracks uses a different function than getting playlists
+            song_sources = song_sources[1:]
+            
+            while True:
+            
+                songs, completed = getAllUserObjects(sp, "tracks",
+                                        starting_offset=len(complete_song_list),
+                                        timeout=3)
+                complete_song_list += songs
+
+                yield '<p style="display:none;"></p>'
+                if completed:
+                    break
+
+        # Load songs from Playlists chosen
+        for playlist in song_sources:
+            complete_song_list += playlist.tracks
+
+        TRACKS_DICT[int(user)] = complete_song_list
+        
+
+    return Response(stream_with_context(get_songs()))
 
 
 @app.route('/comparison')
