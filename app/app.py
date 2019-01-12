@@ -102,9 +102,9 @@ def options():
 
 @app.route('/songsSelected')
 def songsSelected():
-    user = 1
+    user = '1'
     sp = getSpotifyClient(user)
-    message = "Loading %s's Saved Songs..." % sp.me()["display_name"]
+    message = getLoadingMessage('loadSaved', sp.me()["display_name"], user)
 
     return render_template("loading.html", message=message, user=user,
                                 url="/getSongs/saved")
@@ -114,23 +114,17 @@ def loadingPlaylists():
     user = request.args.get("user")
     sp = getSpotifyClient(user)
 
-    if user == '1':
-        message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
-    else:
-        message = "Now Loading %s's Playlist Options..." % sp.me()["display_name"]
+    message = getLoadingMessage('loadPlaylists', sp.me()["display_name"], user)
+
     return render_template("loading.html", message=message,
                                 user=user, url="/playlists")
-    return render_template("error.html")
 
 @app.route('/playlists')
 def playlists():
     user = request.args.get("user")
     sp = getSpotifyClient(user)
 
-    if user == '1':
-        message = "Loading %s's Playlist Options..." % sp.me()["display_name"]
-    else:
-        message = "Now Loading %s's Playlist Options..." % sp.me()["display_name"]
+    message = getLoadingMessage('loadPlaylists', sp.me()["display_name"], user)
 
     def get_playlists():
 
@@ -162,7 +156,7 @@ def select():
 
     sp = getSpotifyClient(user)
     name = sp.me()["display_name"]
-    message = "Loading %s's Songs From the Chosen Sources..." % name
+    message = getLoadingMessage('loadFromSources', sp.me()["display_name"], user)
 
 
     playlists = SONG_SOURCES_DICT[int(user)]
@@ -204,13 +198,10 @@ def getSongs(source):
     template = 'loading.html'
 
     if not source == "playlists":
-        if user == '1':
-            message = "Loading %s's Saved Songs..." % sp.me()["display_name"]
-        else:
-            message = "Now Loading %s's Saved Songs..." % sp.me()["display_name"]
+        message = getLoadingMessage('loadSaved', sp.me()["display_name"], user)
 
     else:
-        message = "Loading %s's Songs From the Chosen Sources..." % sp.me()["display_name"]
+        message = getLoadingMessage('loadFromSources', sp.me()["display_name"], user)
 
     context = {'user': user, 'message': message,
                'url': '/getSongsRedirect/' + source}
@@ -264,10 +255,10 @@ def getSongsRedirect(source):
         songs but after the long step when using playlists. '''
 
         if not source == "playlists":
-            message = "Now Loading %s's Saved Songs..." % sp.me()["display_name"]
+            message = getLoadingMessage('loadSaved', sp.me()["display_name"], second_user)
             url = '/getSongs/saved'
         else:
-            message = "Now Loading %s's Playlist Options..." % sp.me()["display_name"]
+            message = getLoadingMessage('loadPlaylists', sp.me()["display_name"], second_user)
             url = '/loadingPlaylists'
     else:
         message = "Comparing Songs..."
@@ -398,6 +389,29 @@ def getSpotifyClient(user):
     access_token = session[key]["access_token"]
     sp = spotipy.Spotify(auth=access_token)
     return sp
+
+def getLoadingMessage(key, name, user):
+    if not name is None:
+        name_string = ' User ' + name + "'s"
+    else:
+        name_string = ''
+
+    if key == 'loadSaved':
+        message = "Loading%s Saved Songs..." %  name_string
+        if str(user) != '1':
+            message = 'Now ' + message
+
+    elif key == 'loadPlaylists':
+        message = "Loading%s Playlist Options..." % name_string
+        if str(user) != '1':
+            message = 'Now ' + message
+
+    elif key == 'loadFromSources':
+        message = "Loading%s Songs From the Chosen Sources..." % name_string
+    else:
+        message = 'Loading...'
+
+    return message
 
 
 """ Either get all of a user's saved tracks or saved playlists.
