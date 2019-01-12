@@ -235,7 +235,7 @@ def getSongs(source):
             
                 songs, completed = getAllUserObjects(sp, "tracks",
                                         starting_offset=len(complete_song_list),
-                                        timeout=3)
+                                        timeout=10)
                 complete_song_list += songs
 
                 yield '<p style="display:none;"></p>'
@@ -394,9 +394,6 @@ def getAllUserObjects(sp, userObject, starting_offset=0, timeout=None):
     completed = False
 
     while True:
-        # if the request is taking too long, stop this function
-        if timeout and (time.time() - start) > timeout:
-            return objects, completed
 
         if userObject == "tracks":
             SPObjects = sp.current_user_saved_tracks(limit=OBJECTS_PER_TIME, offset=offset)
@@ -423,6 +420,10 @@ def getAllUserObjects(sp, userObject, starting_offset=0, timeout=None):
             objects.append(created_item)
 
         offset += OBJECTS_PER_TIME
+
+        # if the request is taking too long, stop this function
+        if timeout and (time.time() - start) > timeout:
+            return objects, completed
 
     return objects, completed
 
