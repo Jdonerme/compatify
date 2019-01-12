@@ -94,6 +94,10 @@ def callback2():
 
 @app.route('/options')
 def options():
+    sp1, sp2 = getSpotifyClient(1), getSpotifyClient(2)
+    print ("\n--------------------------------------")
+    print ("Compatify attempt for users %s and %s" %
+            (sp1.me()["display_name"], sp2.me()["display_name"]))
     return render_template("options.html")
 
 @app.route('/songsSelected')
@@ -257,8 +261,7 @@ def comparison():
     tracks1 = TRACKS_DICT[1]
     tracks2 = TRACKS_DICT[2]
     sp1, sp2 = getSpotifyClient(1), getSpotifyClient(2)
-    print ("\n------")
-    print ("Compatify run for users %s and %s" % 
+    print ("Compatify success for users %s and %s" %
             (sp1.me()["display_name"], sp2.me()["display_name"]))
 
     if tracks1 == [] or tracks2 == []:
