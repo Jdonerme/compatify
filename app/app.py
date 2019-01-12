@@ -198,31 +198,28 @@ def select():
 @app.route('/getSongs/<source>')
 def getSongs(source):
     user = request.args.get("user")
+    sp = getSpotifyClient(user)
+
+    # Set how the app should direct after loading all songs
+    template = 'loading.html'
+
+    if not source == "playlists":
+        if user == '1':
+            message = "Loading %s's Saved Songs..." % sp.me()["display_name"]
+        else:
+            message = "Now Loading %s's Saved Songs..." % sp.me()["display_name"]
+
+    else:
+        message = "Loading %s's Songs From the Chosen Sources..." % sp.me()["display_name"]
+
+    context = {'user': user, 'message': message,
+               'url': '/getSongsRedirect/' + source}
 
     # If playlist user was not selected, the only song source is the saved tracks
     if not source == "playlists":
         song_sources = ['saved']
     else:
         song_sources = SONG_SOURCES_DICT[int(user)]
-
-    # Set where the app should direct after loading all songs
-    template = 'loading.html'
-        
-    if user == '1':
-        other_user = '2'
-        sp = getSpotifyClient(other_user)
-
-        if not source == "playlists":
-            message = "Now Loading %s's Saved Songs..." % sp.me()["display_name"]
-            context = {'user': other_user, 'message': message, 'url': '/getSongs/saved'}
-        else:
-            message = "Now Loading %s's Playlist Options..." % sp.me()["display_name"]
-            context = {'user': other_user, 'message': message, 'url': '/loadingPlaylists'}
-    else:
-        sp = getSpotifyClient(user)
-        message = "Comparing Songs..."
-
-        context = {'user': '2', 'message': message, 'url': url_for('comparison')}
 
     def get_songs(user, song_sources):
         sp = getSpotifyClient(user)
@@ -255,6 +252,29 @@ def getSongs(source):
 
     return Response(stream_with_context(get_songs(user, song_sources)))
 
+@app.route('/getSongsRedirect/<source>')
+def getSongsRedirect(source):
+    user = request.args.get("user")
+    second_user = '2'
+    if user == '1':
+
+        sp = getSpotifyClient(second_user)
+        ''' loading message is different for playlist and saved songs since this
+        funtion is used before the smain loading of objects when doing saved
+        songs but after the long step when using playlists. '''
+
+        if not source == "playlists":
+            message = "Now Loading %s's Saved Songs..." % sp.me()["display_name"]
+            url = '/getSongs/saved'
+        else:
+            message = "Now Loading %s's Playlist Options..." % sp.me()["display_name"]
+            url = '/loadingPlaylists'
+    else:
+        message = "Comparing Songs..."
+        url = url_for('comparison')
+
+    return render_template("loading.html", message=message, user=second_user,
+                                url=url)
 
 @app.route('/comparison')
 def comparison():
