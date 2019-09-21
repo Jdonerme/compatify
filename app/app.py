@@ -9,14 +9,14 @@ from forms import SelectForm
 from requests import ConnectionError , Timeout
 from werkzeug.exceptions import HTTPException
 import time
-import logging
+# import logging
 
 
 app = Flask(__name__)
 
 app.secret_key = algs.generateRandomString(16)
-log = logging.getLogger('werkzeug')
-log.setLevel(logging.ERROR)
+# log = logging.getLogger('werkzeug')
+# log.setLevel(logging.ERROR)
 
 # GLOBAL VARIABLES
 
@@ -444,7 +444,7 @@ def getAllUserObjects(sp, userObject, starting_offset=0, timeout=None):
                              " saved_tracks or playlists")
             return []
 
-        if len(SPObjects["items"]) == 0:
+        if not SPObjects or len(SPObjects["items"]) == 0:
             completed = True
             break
         for item in SPObjects["items"]:
