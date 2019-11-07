@@ -10,14 +10,14 @@ from forms import SelectForm
 from requests import ConnectionError , Timeout
 from werkzeug.exceptions import HTTPException
 import time
-# import logging
+import logging
 
 
 app = Flask(__name__)
 
 app.secret_key = algs.generateRandomString(16)
-# log = logging.getLogger('werkzeug')
-# log.setLevel(logging.ERROR)
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 
 # GLOBAL VARIABLES
 
