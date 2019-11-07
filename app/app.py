@@ -108,8 +108,7 @@ def callback2():
 def options():
     sp1, sp2 = getSpotifyClient(1), getSpotifyClient(2)
     log.info ("--------------------------------------")
-    log.info ('Compatify attempt:')
-    message = u"users %s and %s" % (sp1.me()["display_name"], sp2.me()["display_name"])
+    message = u"Compatify attempt for users %s and %s" % (sp1.me()["display_name"], sp2.me()["display_name"])
 
     log.info (message)
     return render_template("options.html")
