@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*
 from flask import (
     Flask, render_template, request, redirect, url_for, session, Response,
     stream_with_context, render_template_string)
@@ -96,7 +97,7 @@ def callback2():
 def options():
     sp1, sp2 = getSpotifyClient(1), getSpotifyClient(2)
     print ("\n--------------------------------------")
-    print ("Compatify attempt for users %s and %s" %
+    print (u"Compatify attempt for users %s and %s" %
             (sp1.me()["display_name"], sp2.me()["display_name"]))
     return render_template("options.html")
 
@@ -272,7 +273,7 @@ def comparison():
     tracks1 = TRACKS_DICT[1]
     tracks2 = TRACKS_DICT[2]
     sp1, sp2 = getSpotifyClient(1), getSpotifyClient(2)
-    print ("Compatify success for users %s and %s" %
+    print (u"Compatify success for users %s and %s" %
             (sp1.me()["display_name"], sp2.me()["display_name"]))
 
     if tracks1 == [] or tracks2 == []:
@@ -353,7 +354,7 @@ def success():
         warning = "Warning: matching local tracks were found that were unable to be included in the playlist."
     else:
         warning = ''
-    print ("Playlist Made for users %s and %s" % 
+    print (u"Playlist Made for users %s and %s" %
             (user_name1, user_name2))
     return render_template("success.html", warning=warning)
 
@@ -397,17 +398,17 @@ def getLoadingMessage(key, name, user):
         name_string = ''
 
     if key == 'loadSaved':
-        message = "Loading%s Saved Songs..." %  name_string
+        message = u"Loading%s Saved Songs..." %  name_string
         if str(user) != '1':
             message = 'Now ' + message
 
     elif key == 'loadPlaylists':
-        message = "Loading%s Playlist Options..." % name_string
+        message = u"Loading%s Playlist Options..." % name_string
         if str(user) != '1':
             message = 'Now ' + message
 
     elif key == 'loadFromSources':
-        message = "Loading%s Songs From the Chosen Sources..." % name_string
+        message = u"Loading%s Songs From the Chosen Sources..." % name_string
     else:
         message = 'Loading...'
 
