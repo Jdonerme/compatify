@@ -98,8 +98,11 @@ def options():
     sp1, sp2 = getSpotifyClient(1), getSpotifyClient(2)
     print ("\n--------------------------------------")
     print ('Compatify attempt:')
-    print (u"users %s and %s" %
-            (sp1.me()["display_name"], sp2.me()["display_name"]).encode('utf-8'))
+    message = u"users %s and %s" % (sp1.me()["display_name"], sp2.me()["display_name"])
+    print ("test1")
+    message = message.encode('utf-8')
+    print ("test2")
+    print (message)
     return render_template("options.html")
 
 @app.route('/songsSelected')
