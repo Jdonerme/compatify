@@ -97,8 +97,9 @@ def callback2():
 def options():
     sp1, sp2 = getSpotifyClient(1), getSpotifyClient(2)
     print ("\n--------------------------------------")
-    print (u"Compatify attempt for users %s and %s" %
-            (sp1.me()["display_name"], sp2.me()["display_name"]))
+    print ('Compatify attempt:')
+    print (u"users %s and %s" %
+            (sp1.me()["display_name"], sp2.me()["display_name"]).encode('utf-8'))
     return render_template("options.html")
 
 @app.route('/songsSelected')
