@@ -381,6 +381,7 @@ def handle_error(e):
     code = 500
     if isinstance(e, HTTPException):
         code = e.code
+        message = str(type(e)) + ":\t" + e.message.decode('utf-8').strip()
 
     elif isinstance(e, ConnectionError):
         message="There was en error connecting to the Spotify API. \
