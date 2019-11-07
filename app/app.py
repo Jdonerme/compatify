@@ -2,6 +2,7 @@
 from flask import (
     Flask, render_template, request, redirect, url_for, session, Response,
     stream_with_context, render_template_string)
+from flask.logging import default_handler
 import spotipy, os, algs
 from spotipy import oauth2
 from Song import Song, create_song_obj_from_track_dict
@@ -12,14 +13,11 @@ from werkzeug.exceptions import HTTPException
 import time
 import logging
 
-
 app = Flask(__name__)
-
 app.secret_key = algs.generateRandomString(16)
-log = logging.getLogger('werkzeug')
-log.setLevel(logging.ERROR)
 
 # GLOBAL VARIABLES
+log = logging.getLogger('my-logger')
 
 PORT_NUMBER = int(os.environ.get('PORT', 8888))
 SPOTIPY_CLIENT_ID = '883896384d0c4d158bab154c01de29db'
@@ -30,10 +28,14 @@ PRODUCTION = True
 if PRODUCTION:
     SPOTIPY_REDIRECT_URI1 = 'https://compatify.herokuapp.com/callback1'
     SPOTIPY_REDIRECT_URI2 = 'https://compatify.herokuapp.com/callback2'
+
+    # Set flask logs to "warning level only in production builds"
+    flaskLog = logging.getLogger('werkzeug')
+    flaskLog.setLevel(logging.WARNING)
+    app.logger.setLevel(logging.WARNING)
 else:
     SPOTIPY_REDIRECT_URI1 = 'http://localhost:8888/callback1'
     SPOTIPY_REDIRECT_URI2 = 'http://localhost:8888/callback2'
-
 
 SCOPE = 'user-library-read playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private'
 CACHE = '.spotipyoauthcache'
@@ -51,7 +53,6 @@ INTERSECTION_PLAYLIST = {}
 TRACKS_DICT = {}
 SONG_SOURCES_DICT = {}
 SELECTED = {}
-
 
 # VIEWS
 
@@ -96,13 +97,13 @@ def callback2():
 @app.route('/options')
 def options():
     sp1, sp2 = getSpotifyClient(1), getSpotifyClient(2)
-    print ("\n--------------------------------------")
-    print ('Compatify attempt:')
+    log.info ("--------------------------------------")
+    log.info ('Compatify attempt:')
     message = u"users %s and %s" % (sp1.me()["display_name"], sp2.me()["display_name"])
 
-    print (message.decode("latin1"))
-    message = message.decode("latin1").encode('utf-8')
-    print (message)
+    # print (message.decode("latin1"))
+    # message = message.decode("latin1").encode('utf-8')
+    log.info (message)
     return render_template("options.html")
 
 @app.route('/songsSelected')
@@ -278,8 +279,9 @@ def comparison():
     tracks2 = TRACKS_DICT[2]
     sp1, sp2 = getSpotifyClient(1), getSpotifyClient(2)
     message = u"Compatify success for users %s and %s" % (sp1.me()["display_name"], sp2.me()["display_name"])
-    message = message.encode('utf-8')
-    print (message.decode("latin1"))
+    # message = message.encode('utf-8')
+    # print (message.decode("latin1"))
+    log.info(message)
 
     if tracks1 == [] or tracks2 == []:
         intersection_songs, top5artists = [], []
@@ -359,9 +361,9 @@ def success():
         warning = "Warning: matching local tracks were found that were unable to be included in the playlist."
     else:
         warning = ''
-    message = u"Playlist Made for users %s and %s" %
-            (user_name1, user_name2)
-    print (message.decode("latin1"))
+    message = u"Playlist Made for users %s and %s" % (user_name1, user_name2)
+    # print (message.decode("latin1"))
+    log.info(message)
     return render_template("success.html", warning=warning)
 
 @app.errorhandler(Exception)
@@ -385,8 +387,9 @@ def handle_error(e):
                   try again."
     else:
         message = str(type(e)) + ":\t" + e.message.decode('utf-8').strip()
-    print ("Error occured:")
-    print (message)
+    log.error("Error occured:")
+    log.error(message)
+    # print (message)
     return render_template("error.html", message=message)
 
 
@@ -473,4 +476,6 @@ def getAllUserObjects(sp, userObject, starting_offset=0, timeout=None):
     return objects, completed
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=PORT_NUMBER, debug=False)
+    log.addHandler(default_handler)
+    log.setLevel(logging.INFO)
+    app.run(host='0.0.0.0', port=PORT_NUMBER, debug=(not PRODUCTION))
