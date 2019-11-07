@@ -3,7 +3,8 @@ from flask import (
     Flask, render_template, request, redirect, url_for, session, Response,
     stream_with_context, render_template_string)
 from flask.logging import default_handler
-import spotipy, os, algs
+import spotipy, sys, os, algs
+from contextlib import contextmanager
 from spotipy import oauth2
 from Song import Song, create_song_obj_from_track_dict
 from Playlist import Playlist, create_playlist_obj_from_dict
@@ -54,6 +55,16 @@ TRACKS_DICT = {}
 SONG_SOURCES_DICT = {}
 SELECTED = {}
 
+@contextmanager
+def suppress_stdout():
+    with open(os.devnull, "w") as devnull:
+        old_stdout = sys.stdout
+        sys.stdout = devnull
+        try:
+            yield
+        finally:
+            sys.stdout = old_stdout
+
 # VIEWS
 
 @app.route('/')
@@ -61,7 +72,6 @@ SELECTED = {}
 def index():       
     auth_url1 = sp_oauth1.get_authorize_url()
     return render_template("first.html", auth_url=auth_url1)
-
 
 
 @app.route('/callback1')
@@ -440,38 +450,39 @@ def getAllUserObjects(sp, userObject, starting_offset=0, timeout=None):
     OBJECTS_PER_TIME = 50
     offset=starting_offset
     completed = False
-
-    while True:
-
-        if userObject == "tracks":
-            SPObjects = sp.current_user_saved_tracks(limit=OBJECTS_PER_TIME, offset=offset)
-
-        elif userObject == "playlists" :
-            #SPObjects = sp.current_user_playlists(limit=OBJECTS_PER_TIME, offset=offset)
-            user = sp.me()["id"]
-            SPObjects = sp.user_playlists(user, limit=OBJECTS_PER_TIME, offset=offset)
-        else:
-            raise TypeError ("getAllUserObjects is expecting to get only either"
-                             " saved_tracks or playlists")
-            return []
-
-        if not SPObjects or len(SPObjects["items"]) == 0:
-            completed = True
-            break
-        for item in SPObjects["items"]:
+    # Disable spotify api retrying messges
+    with suppress_stdout():
+        while True:
 
             if userObject == "tracks":
-                track = item["track"]
-                created_item = create_song_obj_from_track_dict(sp, track)
-            else: # userObject == "playlist"
-                created_item = create_playlist_obj_from_dict(sp, item)
-            objects.append(created_item)
+                SPObjects = sp.current_user_saved_tracks(limit=OBJECTS_PER_TIME, offset=offset)
 
-        offset += OBJECTS_PER_TIME
+            elif userObject == "playlists" :
+                #SPObjects = sp.current_user_playlists(limit=OBJECTS_PER_TIME, offset=offset)
+                user = sp.me()["id"]
+                SPObjects = sp.user_playlists(user, limit=OBJECTS_PER_TIME, offset=offset)
+            else:
+                raise TypeError ("getAllUserObjects is expecting to get only either"
+                                 " saved_tracks or playlists")
+                return []
 
-        # if the request is taking too long, stop this function
-        if timeout and (time.time() - start) > timeout:
-            return objects, completed
+            if not SPObjects or len(SPObjects["items"]) == 0:
+                completed = True
+                break
+            for item in SPObjects["items"]:
+
+                if userObject == "tracks":
+                    track = item["track"]
+                    created_item = create_song_obj_from_track_dict(sp, track)
+                else: # userObject == "playlist"
+                    created_item = create_playlist_obj_from_dict(sp, item)
+                objects.append(created_item)
+
+            offset += OBJECTS_PER_TIME
+
+            # if the request is taking too long, stop this function
+            if timeout and (time.time() - start) > timeout:
+                return objects, completed
 
     return objects, completed
 
