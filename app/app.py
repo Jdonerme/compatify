@@ -99,7 +99,9 @@ def options():
     print ("\n--------------------------------------")
     print ('Compatify attempt:')
     message = u"users %s and %s" % (sp1.me()["display_name"], sp2.me()["display_name"])
-    message = message.encode('utf-8')
+
+    print (message.decode("latin1"))
+    message = message.decode("latin1").encode('utf-8')
     print (message)
     return render_template("options.html")
 
@@ -277,7 +279,7 @@ def comparison():
     sp1, sp2 = getSpotifyClient(1), getSpotifyClient(2)
     message = u"Compatify success for users %s and %s" % (sp1.me()["display_name"], sp2.me()["display_name"])
     message = message.encode('utf-8')
-    print (message)
+    print (message.decode("latin1"))
 
     if tracks1 == [] or tracks2 == []:
         intersection_songs, top5artists = [], []
@@ -357,8 +359,9 @@ def success():
         warning = "Warning: matching local tracks were found that were unable to be included in the playlist."
     else:
         warning = ''
-    print (u"Playlist Made for users %s and %s" %
-            (user_name1, user_name2))
+    message = u"Playlist Made for users %s and %s" %
+            (user_name1, user_name2)
+    print (message.decode("latin1"))
     return render_template("success.html", warning=warning)
 
 @app.errorhandler(Exception)
@@ -382,7 +385,8 @@ def handle_error(e):
                   try again."
     else:
         message = str(type(e)) + ":\t" + e.message.decode('utf-8').strip()
-
+    print ("Error occured:")
+    print (message)
     return render_template("error.html", message=message)
 
 
