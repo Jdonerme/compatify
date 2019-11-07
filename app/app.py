@@ -111,8 +111,6 @@ def options():
     log.info ('Compatify attempt:')
     message = u"users %s and %s" % (sp1.me()["display_name"], sp2.me()["display_name"])
 
-    # print (message.decode("latin1"))
-    # message = message.decode("latin1").encode('utf-8')
     log.info (message)
     return render_template("options.html")
 
@@ -289,8 +287,7 @@ def comparison():
     tracks2 = TRACKS_DICT[2]
     sp1, sp2 = getSpotifyClient(1), getSpotifyClient(2)
     message = u"Compatify success for users %s and %s" % (sp1.me()["display_name"], sp2.me()["display_name"])
-    # message = message.encode('utf-8')
-    # print (message.decode("latin1"))
+
     log.info(message)
 
     if tracks1 == [] or tracks2 == []:
@@ -372,16 +369,15 @@ def success():
     else:
         warning = ''
     message = u"Playlist Made for users %s and %s" % (user_name1, user_name2)
-    # print (message.decode("latin1"))
     log.info(message)
     return render_template("success.html", warning=warning)
 
 @app.errorhandler(Exception)
 def handle_error(e):
     code = 500
+    message = ''
     if isinstance(e, HTTPException):
         code = e.code
-        message = str(type(e)) + ":\t" + e.message.decode('utf-8').strip()
 
     elif isinstance(e, ConnectionError):
         message="There was en error connecting to the Spotify API. \
@@ -398,9 +394,8 @@ def handle_error(e):
                   try again."
     else:
         message = str(type(e)) + ":\t" + e.message.decode('utf-8').strip()
-    log.error("Error occured:")
-    log.error(message)
-    # print (message)
+    if message:
+        log.error(message)
     return render_template("error.html", message=message)
 
 
