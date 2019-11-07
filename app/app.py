@@ -99,9 +99,7 @@ def options():
     print ("\n--------------------------------------")
     print ('Compatify attempt:')
     message = u"users %s and %s" % (sp1.me()["display_name"], sp2.me()["display_name"])
-    print ("test1")
     message = message.encode('utf-8')
-    print ("test2")
     print (message)
     return render_template("options.html")
 
@@ -277,8 +275,9 @@ def comparison():
     tracks1 = TRACKS_DICT[1]
     tracks2 = TRACKS_DICT[2]
     sp1, sp2 = getSpotifyClient(1), getSpotifyClient(2)
-    print (u"Compatify success for users %s and %s" %
-            (sp1.me()["display_name"], sp2.me()["display_name"]))
+    message = u"Compatify success for users %s and %s" % (sp1.me()["display_name"], sp2.me()["display_name"])
+    message = message.encode('utf-8')
+    print (message)
 
     if tracks1 == [] or tracks2 == []:
         intersection_songs, top5artists = [], []
