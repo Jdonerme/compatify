@@ -1,7 +1,10 @@
+# -*- coding: utf-8 -*
 from flask import (
     Flask, render_template, request, redirect, url_for, session, Response,
     stream_with_context, render_template_string)
-import spotipy, os, algs
+from flask.logging import default_handler
+import spotipy, sys, os, algs
+from contextlib import contextmanager
 from spotipy import oauth2
 from Song import Song, create_song_obj_from_track_dict
 from Playlist import Playlist, create_playlist_obj_from_dict
@@ -9,16 +12,13 @@ from forms import SelectForm
 from requests import ConnectionError , Timeout
 from werkzeug.exceptions import HTTPException
 import time
-# import logging
-
+import logging
 
 app = Flask(__name__)
-
 app.secret_key = algs.generateRandomString(16)
-# log = logging.getLogger('werkzeug')
-# log.setLevel(logging.ERROR)
 
 # GLOBAL VARIABLES
+log = logging.getLogger('my-logger')
 
 PORT_NUMBER = int(os.environ.get('PORT', 8888))
 SPOTIPY_CLIENT_ID = '883896384d0c4d158bab154c01de29db'
@@ -29,10 +29,14 @@ PRODUCTION = True
 if PRODUCTION:
     SPOTIPY_REDIRECT_URI1 = 'https://compatify.herokuapp.com/callback1'
     SPOTIPY_REDIRECT_URI2 = 'https://compatify.herokuapp.com/callback2'
+
+    # Set flask logs to "warning level only in production builds"
+    flaskLog = logging.getLogger('werkzeug')
+    flaskLog.setLevel(logging.WARNING)
+    app.logger.setLevel(logging.WARNING)
 else:
     SPOTIPY_REDIRECT_URI1 = 'http://localhost:8888/callback1'
     SPOTIPY_REDIRECT_URI2 = 'http://localhost:8888/callback2'
-
 
 SCOPE = 'user-library-read playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private'
 CACHE = '.spotipyoauthcache'
@@ -51,6 +55,15 @@ TRACKS_DICT = {}
 SONG_SOURCES_DICT = {}
 SELECTED = {}
 
+@contextmanager
+def suppress_stdout():
+    with open(os.devnull, "w") as devnull:
+        old_stdout = sys.stdout
+        sys.stdout = devnull
+        try:
+            yield
+        finally:
+            sys.stdout = old_stdout
 
 # VIEWS
 
@@ -59,7 +72,6 @@ SELECTED = {}
 def index():       
     auth_url1 = sp_oauth1.get_authorize_url()
     return render_template("first.html", auth_url=auth_url1)
-
 
 
 @app.route('/callback1')
@@ -95,9 +107,10 @@ def callback2():
 @app.route('/options')
 def options():
     sp1, sp2 = getSpotifyClient(1), getSpotifyClient(2)
-    print ("\n--------------------------------------")
-    print ("Compatify attempt for users %s and %s" %
-            (sp1.me()["display_name"], sp2.me()["display_name"]))
+    log.info ("--------------------------------------")
+    message = u"Compatify attempt for users %s and %s" % (sp1.me()["display_name"], sp2.me()["display_name"])
+
+    log.info (message)
     return render_template("options.html")
 
 @app.route('/songsSelected')
@@ -272,8 +285,9 @@ def comparison():
     tracks1 = TRACKS_DICT[1]
     tracks2 = TRACKS_DICT[2]
     sp1, sp2 = getSpotifyClient(1), getSpotifyClient(2)
-    print ("Compatify success for users %s and %s" %
-            (sp1.me()["display_name"], sp2.me()["display_name"]))
+    message = u"Compatify success for users %s and %s" % (sp1.me()["display_name"], sp2.me()["display_name"])
+
+    log.info(message)
 
     if tracks1 == [] or tracks2 == []:
         intersection_songs, top5artists = [], []
@@ -353,13 +367,14 @@ def success():
         warning = "Warning: matching local tracks were found that were unable to be included in the playlist."
     else:
         warning = ''
-    print ("Playlist Made for users %s and %s" % 
-            (user_name1, user_name2))
+    message = u"Playlist Made for users %s and %s" % (user_name1, user_name2)
+    log.info(message)
     return render_template("success.html", warning=warning)
 
 @app.errorhandler(Exception)
 def handle_error(e):
     code = 500
+    message = ''
     if isinstance(e, HTTPException):
         code = e.code
 
@@ -378,7 +393,8 @@ def handle_error(e):
                   try again."
     else:
         message = str(type(e)) + ":\t" + e.message.decode('utf-8').strip()
-
+    if message:
+        log.error(message)
     return render_template("error.html", message=message)
 
 
@@ -397,17 +413,17 @@ def getLoadingMessage(key, name, user):
         name_string = ''
 
     if key == 'loadSaved':
-        message = "Loading%s Saved Songs..." %  name_string
+        message = u"Loading%s Saved Songs..." %  name_string
         if str(user) != '1':
             message = 'Now ' + message
 
     elif key == 'loadPlaylists':
-        message = "Loading%s Playlist Options..." % name_string
+        message = u"Loading%s Playlist Options..." % name_string
         if str(user) != '1':
             message = 'Now ' + message
 
     elif key == 'loadFromSources':
-        message = "Loading%s Songs From the Chosen Sources..." % name_string
+        message = u"Loading%s Songs From the Chosen Sources..." % name_string
     else:
         message = 'Loading...'
 
@@ -429,40 +445,43 @@ def getAllUserObjects(sp, userObject, starting_offset=0, timeout=None):
     OBJECTS_PER_TIME = 50
     offset=starting_offset
     completed = False
-
-    while True:
-
-        if userObject == "tracks":
-            SPObjects = sp.current_user_saved_tracks(limit=OBJECTS_PER_TIME, offset=offset)
-
-        elif userObject == "playlists" :
-            #SPObjects = sp.current_user_playlists(limit=OBJECTS_PER_TIME, offset=offset)
-            user = sp.me()["id"]
-            SPObjects = sp.user_playlists(user, limit=OBJECTS_PER_TIME, offset=offset)
-        else:
-            raise TypeError ("getAllUserObjects is expecting to get only either"
-                             " saved_tracks or playlists")
-            return []
-
-        if not SPObjects or len(SPObjects["items"]) == 0:
-            completed = True
-            break
-        for item in SPObjects["items"]:
+    # Disable spotify api retrying messges
+    with suppress_stdout():
+        while True:
 
             if userObject == "tracks":
-                track = item["track"]
-                created_item = create_song_obj_from_track_dict(sp, track)
-            else: # userObject == "playlist"
-                created_item = create_playlist_obj_from_dict(sp, item)
-            objects.append(created_item)
+                SPObjects = sp.current_user_saved_tracks(limit=OBJECTS_PER_TIME, offset=offset)
 
-        offset += OBJECTS_PER_TIME
+            elif userObject == "playlists" :
+                #SPObjects = sp.current_user_playlists(limit=OBJECTS_PER_TIME, offset=offset)
+                user = sp.me()["id"]
+                SPObjects = sp.user_playlists(user, limit=OBJECTS_PER_TIME, offset=offset)
+            else:
+                raise TypeError ("getAllUserObjects is expecting to get only either"
+                                 " saved_tracks or playlists")
+                return []
 
-        # if the request is taking too long, stop this function
-        if timeout and (time.time() - start) > timeout:
-            return objects, completed
+            if not SPObjects or len(SPObjects["items"]) == 0:
+                completed = True
+                break
+            for item in SPObjects["items"]:
+
+                if userObject == "tracks":
+                    track = item["track"]
+                    created_item = create_song_obj_from_track_dict(sp, track)
+                else: # userObject == "playlist"
+                    created_item = create_playlist_obj_from_dict(sp, item)
+                objects.append(created_item)
+
+            offset += OBJECTS_PER_TIME
+
+            # if the request is taking too long, stop this function
+            if timeout and (time.time() - start) > timeout:
+                return objects, completed
 
     return objects, completed
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=PORT_NUMBER, debug=False)
+    log.addHandler(default_handler)
+    log.setLevel(logging.INFO)
+    app.run(host='0.0.0.0', port=PORT_NUMBER, debug=(not PRODUCTION))
