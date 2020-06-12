@@ -5,9 +5,9 @@ from flask import (
 from flask.logging import default_handler
 import spotipy, sys, os, algs
 from contextlib import contextmanager
-from spotipy import oauth2
 from Song import Song, create_song_obj_from_track_dict
 from Playlist import Playlist, create_playlist_obj_from_dict
+from State import State
 from forms import SelectForm
 from requests import ConnectionError , Timeout
 from werkzeug.exceptions import HTTPException
@@ -21,39 +21,16 @@ app.secret_key = algs.generateRandomString(16)
 log = logging.getLogger('my-logger')
 
 PORT_NUMBER = int(os.environ.get('PORT', 8888))
-SPOTIPY_CLIENT_ID = '883896384d0c4d158bab154c01de29db'
-SPOTIPY_CLIENT_SECRET = '37443ee0c0404c44b755f3ed97c48493'
 
-PRODUCTION = True
+STATE = State(production = True)
 
-if PRODUCTION:
-    SPOTIPY_REDIRECT_URI1 = 'https://compatify.herokuapp.com/callback1'
-    SPOTIPY_REDIRECT_URI2 = 'https://compatify.herokuapp.com/callback2'
-
+if STATE.inProductionMode():
     # Set flask logs to "warning level only in production builds"
     flaskLog = logging.getLogger('werkzeug')
     flaskLog.setLevel(logging.WARNING)
     app.logger.setLevel(logging.WARNING)
-else:
-    SPOTIPY_REDIRECT_URI1 = 'http://localhost:8888/callback1'
-    SPOTIPY_REDIRECT_URI2 = 'http://localhost:8888/callback2'
-
-SCOPE = 'user-library-read playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private'
-CACHE = '.spotipyoauthcache'
-
-STATE1 = algs.generateRandomString(16)
-STATE2 = algs.generateRandomString(16)
-
-sp_oauth1 = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIPY_REDIRECT_URI1,state=STATE1,scope=SCOPE,cache_path=CACHE,show_dialog=True)
-sp_oauth2 = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIPY_REDIRECT_URI2,state=STATE2,scope=SCOPE,cache_path=CACHE,show_dialog=True)
-
-
-INTERSECTION_PLAYLIST = {}
 
 # list of the tracks and playlists for each user where the key is the integer user id
-TRACKS_DICT = {}
-SONG_SOURCES_DICT = {}
-SELECTED = {}
 
 @contextmanager
 def suppress_stdout():
@@ -70,6 +47,7 @@ def suppress_stdout():
 @app.route('/')
 @app.route('/index')
 def index():       
+    sp_oauth1 = STATE.getOAuthObjects(1)
     auth_url1 = sp_oauth1.get_authorize_url()
     return render_template("first.html", auth_url=auth_url1)
 
@@ -79,10 +57,11 @@ def callback1():
     code = request.args.get('code')
     state = request.args.get('state')
 
-    if code and state == STATE1:
-        token = sp_oauth1.get_access_token(code)
+    if code and state == STATE.getOAuthKeys(1):
+        token = STATE.getOAuthObjects(1).get_access_token(code)
         session["TOKEN1"] = token
-        auth_url2 = sp_oauth2.get_authorize_url()
+
+        auth_url2 = STATE.getOAuthObjects(2).get_authorize_url()
         return render_template("second.html", auth_url=auth_url2)
 
     else:
@@ -93,8 +72,8 @@ def callback2():
     code = request.args.get('code')
     state = request.args.get('state')
 
-    if code and state == STATE2:
-        token = sp_oauth2.get_access_token(code)
+    if code and state == STATE.getOAuthKeys(2):
+        token = STATE.getOAuthObjects(2).get_access_token(code)
         session["TOKEN2"] = token
 
         access_token2 = token["access_token"]
@@ -106,10 +85,9 @@ def callback2():
 
 @app.route('/options')
 def options():
-    sp1, sp2 = getSpotifyClient(1), getSpotifyClient(2)
     log.info ("--------------------------------------")
+    sp1, sp2 = getSpotifyClient(1), getSpotifyClient(2)
     message = u"Compatify attempt for users %s and %s" % (sp1.me()["display_name"], sp2.me()["display_name"])
-
     log.info (message)
     return render_template("options.html")
 
@@ -156,8 +134,8 @@ def playlists():
                 break
             else:
                 yield '<p style="display:none;"></p>'
-
-        SONG_SOURCES_DICT[int(user)] = complete_playlist_list
+        song_sources_dict = STATE.getSongSourcesDict()
+        song_sources_dict[int(user)] = complete_playlist_list
 
     return Response(stream_with_context(get_playlists()))
 
@@ -171,8 +149,8 @@ def select():
     name = sp.me()["display_name"]
     message = getLoadingMessage('loadFromSources', sp.me()["display_name"], user)
 
-
-    playlists = SONG_SOURCES_DICT[int(user)]
+    song_sources_dict = STATE.getSongSourcesDict()
+    playlists = song_sources_dict[int(user)]
     source_choices = list(map(lambda x : (x.id, x.name), playlists))
     source_choices = [("saved", "Your Saved Songs")] + source_choices
 
@@ -190,7 +168,7 @@ def select():
             selection = selection[1:]
 
         selected_objects += [p for p in playlists if p.id in selection]
-        SONG_SOURCES_DICT[int(user)] = selected_objects
+        song_sources_dict[int(user)] = selected_objects
 
         return render_template("loading.html", message=message, user=user,
                                 url=url)
@@ -223,7 +201,8 @@ def getSongs(source):
     if not source == "playlists":
         song_sources = ['saved']
     else:
-        song_sources = SONG_SOURCES_DICT[int(user)]
+        song_sources_dict = STATE.getSongSourcesDict()
+        song_sources = song_sources_dict[int(user)]
 
     def get_songs(user, song_sources):
         sp = getSpotifyClient(user)
@@ -251,7 +230,8 @@ def getSongs(source):
         for playlist in song_sources:
             complete_song_list += playlist.tracks
 
-        TRACKS_DICT[int(user)] = complete_song_list
+        tracks_dict = STATE.getTracksDict()
+        tracks_dict[int(user)] = complete_song_list
         
 
     return Response(stream_with_context(get_songs(user, song_sources)))
@@ -282,8 +262,9 @@ def getSongsRedirect(source):
 
 @app.route('/comparison')
 def comparison():
-    tracks1 = TRACKS_DICT[1]
-    tracks2 = TRACKS_DICT[2]
+    tracks_dict = STATE.getTracksDict()
+    tracks1 = tracks_dict[1]
+    tracks2 = tracks_dict[2]
     sp1, sp2 = getSpotifyClient(1), getSpotifyClient(2)
     message = u"Compatify success for users %s and %s" % (sp1.me()["display_name"], sp2.me()["display_name"])
 
@@ -310,8 +291,9 @@ def comparison():
 
         intersection_playlist_uris = algs.getInformation(intersection_songs, 'uri')
 
-    INTERSECTION_PLAYLIST["uris"] = intersection_playlist_uris
-    INTERSECTION_PLAYLIST["names"] = intersection_playlist_names
+    intersection_playlist = STATE.getIntersectionPlaylist()
+    intersection_playlist["uris"] = intersection_playlist_uris
+    intersection_playlist["names"] = intersection_playlist_names
 
     return render_template("last.html", score=int(score),
                             count=intersection_size, artists=top5artists,
@@ -324,8 +306,10 @@ def success():
     token2 = session["TOKEN2"]
     access_token1 = token1["access_token"]
     access_token2 = token2["access_token"]
-    intersection_songs = INTERSECTION_PLAYLIST["uris"]
-    intersection_names = INTERSECTION_PLAYLIST["names"]
+    
+    intersection_playlist = STATE.getIntersectionPlaylist()
+    intersection_songs = intersection_playlist["uris"]
+    intersection_names = intersection_playlist["names"]
 
     session.clear()
 
@@ -484,4 +468,4 @@ def getAllUserObjects(sp, userObject, starting_offset=0, timeout=None):
 if __name__ == '__main__':
     log.addHandler(default_handler)
     log.setLevel(logging.INFO)
-    app.run(host='0.0.0.0', port=PORT_NUMBER, debug=(not PRODUCTION))
+    app.run(host='0.0.0.0', port=PORT_NUMBER, debug=(not STATE.inProductionMode()))
