@@ -360,7 +360,9 @@ def success():
     playlist_name = 'Compatify ' + user_name1 + ' ' + user_name2
 
     new_playlist1 = sp1.user_playlist_create(user_id1, playlist_name, public=False)
-    new_playlist2 = sp2.user_playlist_create(user_id2, playlist_name, public=False)
+    makeSecondPlaylist = user_id1 != user_id2
+    if makeSecondPlaylist:
+        new_playlist2 = sp2.user_playlist_create(user_id2, playlist_name, public=False)
 
     size = len(intersection_songs)
 
@@ -369,11 +371,13 @@ def success():
         current_num = size - index
         if current_num > 100:
             sp1.user_playlist_add_tracks(user_id1, new_playlist1["id"], intersection_songs[index:index+100], position=None)
-            sp2.user_playlist_add_tracks(user_id2, new_playlist2["id"], intersection_songs[index:index+100], position=None)
+            if makeSecondPlaylist:
+                sp2.user_playlist_add_tracks(user_id2, new_playlist2["id"], intersection_songs[index:index+100], position=None)
             index += 100
         elif current_num > 0:
             sp1.user_playlist_add_tracks(user_id1, new_playlist1["id"], intersection_songs[index:index+current_num], position=None)
-            sp2.user_playlist_add_tracks(user_id2, new_playlist2["id"], intersection_songs[index:index+current_num], position=None)
+            if makeSecondPlaylist:
+                sp2.user_playlist_add_tracks(user_id2, new_playlist2["id"], intersection_songs[index:index+current_num], position=None)
             break
         else:
             break
