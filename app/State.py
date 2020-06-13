@@ -5,6 +5,7 @@ class State(object):
     def __init__(self, production=True):
         self._OAuthKeys = generateRandomString(16), generateRandomString(16)
         self._production = production
+        self._match = False
 
         # playlist of songs that have been found for both user's librarys
         self._intersection_playlist = {}
@@ -19,10 +20,14 @@ class State(object):
 
     def initialize(self):
         self.__init__(self.production)
-        return state
     
     def inProductionMode(self):
         return self._production
+    def inMatchMode(self):
+        return self._match
+    def enableMatchMode(self):
+        self._match = True
+
     def getIntersectionPlaylist(self):
         return self._intersection_playlist
     def getTracksDict(self):
