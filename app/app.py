@@ -122,6 +122,9 @@ def loadingPlaylists():
 
     message = getLoadingMessage('loadPlaylists', sp.me()["display_name"], user)
 
+    if STATE.inMatchMode() and user == '2':
+        message = getLoadingMessage('loadSaved', '', user)
+
     return render_template("loading.html", message=message,
                                 user=user, url="/playlists")
 
@@ -131,6 +134,8 @@ def playlists():
     sp = getSpotifyClient(user)
 
     message = getLoadingMessage('loadPlaylists', sp.me()["display_name"], user)
+    if STATE.inMatchMode() and user == '2':
+        message = getLoadingMessage('loadSaved', '', user)
 
     def get_playlists():
 
@@ -166,6 +171,15 @@ def select():
 
     song_sources_dict = STATE.getSongSourcesDict()
     playlists = song_sources_dict[int(user)]
+
+    # if in match mode, take the first playlist for matching
+    if STATE.inMatchMode() and user == '2':
+        selected_objects = playlists[:1]
+        song_sources_dict[int(user)] = selected_objects
+        message = getLoadingMessage('loadSaved', '', user)
+        return render_template("loading.html", message=message, user=user,
+                                url=url)
+
     source_choices = list(map(lambda x : (x.id, x.name), playlists))
     source_choices = [("saved", "Your Saved Songs")] + source_choices
 
@@ -201,25 +215,22 @@ def getSongs(source):
 
     # Set how the app should direct after loading all songs
     template = 'loading.html'
+    sp = getSpotifyClient(user)
 
-    if STATE.inMatchMode and user == '2':
-        message = getLoadingMessage('loadSaved', '', user)
-    else:
-        sp = getSpotifyClient(user)
-        if not source == "playlists":
-            message = getLoadingMessage('loadSaved', sp.me()["display_name"], user)
-        else:
-            message = getLoadingMessage('loadFromSources', sp.me()["display_name"], user)
-
-    context = {'user': user, 'message': message,
-               'url': '/getSongsRedirect/' + source}
-
-    # If playlist user was not selected, the only song source is the saved tracks
+    # If playlist source was not selected, the only song source is the saved tracks
     if not source == "playlists":
+        message = getLoadingMessage('loadSaved', sp.me()["display_name"], user)
         song_sources = ['saved']
     else:
+        message = getLoadingMessage('loadFromSources', sp.me()["display_name"], user)
         song_sources_dict = STATE.getSongSourcesDict()
         song_sources = song_sources_dict[int(user)]
+
+    if STATE.inMatchMode() and user == '2':
+        message = getLoadingMessage('loadSaved', '', user)
+
+    context = {'user': user, 'message': message,
+               'url':  '/getSongsRedirect/' + source}
 
     def get_songs(user, song_sources):
         sp = getSpotifyClient(user)
@@ -260,7 +271,7 @@ def getSongsRedirect(source):
     if user == '1':
         if STATE.inMatchMode():
             message = getLoadingMessage('loadSaved', '', second_user)
-            url = '/getSongs/saved'
+            url = '/loadingPlaylists'
         else:
             sp = getSpotifyClient(second_user)
             ''' loading message is different for playlist and saved songs since this
