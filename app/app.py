@@ -395,15 +395,14 @@ def handle_error(e):
         message = "The application is missing session data due to an unexpected \
                    redirect. Please start again from the beginning.\n"
         message += '\n'
-        logging.exception('Key Error')
+        logging.exception(e)
 
     elif isinstance(e, Timeout):
         message = "HTTP timeout error. Please check your network connection and \
                   try again."
     else:
-        exception_message = str(type(e)) + "\t-\t" + e.message.decode('utf-8').strip()
-        message = "Something went wrong: " + exception_message
-        logging.exception(exception_message)
+        message = "Something went wrong: " + str(type(e)) + "\t-\t" + str(e).strip()
+        logging.exception(e)
 
     if message:
         log.error(message)
