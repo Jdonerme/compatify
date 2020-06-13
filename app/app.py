@@ -54,6 +54,8 @@ def suppress_stdout():
 @app.route('/<view>')
 @app.route('/index/<view>')
 def index(view=''):
+    if (view != "favicon.ico" and STATE.isDirty()):
+        STATE.clean()
     sp_oauth1 = STATE.getOAuthObjects(1)
     auth_url1 = sp_oauth1.get_authorize_url()
     message = "How compatible are your music tastes?"

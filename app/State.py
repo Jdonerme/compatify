@@ -18,8 +18,16 @@ class State(object):
         self._selected = {}
         self._OAuthObjects = self._createOAuthObjects()
 
-    def initialize(self):
-        self.__init__(self.production)
+    def isDirty(self):
+        if self.getIntersectionPlaylist() or \
+           self.getTracksDict() or \
+           self.getSongSourcesDict() or \
+           self.inMatchMode():
+                return True
+        return False
+
+    def clean(self):
+        self.__init__(self._production)
     
     def inProductionMode(self):
         return self._production
