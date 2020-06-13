@@ -88,7 +88,7 @@ def take_artists_from_song_name(name, artist_set):
 
 def create_song_obj_from_track_dict(sp, track, local=False):
     return Song(sp, track["uri"], track["name"], track["artists"][0]["name"],
-            map(lambda x: x["name"], track["artists"][1:]),
+            list(map(lambda x: x["name"], track["artists"][1:])),
             track["album"]["name"], track["duration_ms"], local)
 
 
