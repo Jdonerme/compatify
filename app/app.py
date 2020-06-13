@@ -22,7 +22,7 @@ log = logging.getLogger('my-logger')
 
 PORT_NUMBER = int(os.environ.get('PORT', 8888))
 
-STATE = State(production = True)
+STATE = State(production = False)
 
 if STATE.inProductionMode():
     # Set flask logs to "warning level only in production builds"
