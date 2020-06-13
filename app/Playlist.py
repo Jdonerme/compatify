@@ -56,8 +56,8 @@ class Playlist(object):
     @lazy_property
     def tracks(self):
         song_objects = []
-        results = self.sp.user_playlist_tracks(self.username, self.id,
-                                   fields=Playlist.required_fields)
+        results = self.sp.playlist_tracks(self.id,
+                        fields=Playlist.required_fields)
 
         for item in results["items"]:
             track = item['track']
