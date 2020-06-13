@@ -12,7 +12,7 @@ on the team of Joon Hee Lee, Catherine Ma, and Celia Zhang.
 ''' Given a list of song objects, returns a list of the key values
  of the songs. '''
 def getInformation(playlist, key='uri'):
-    return map(lambda x: x[key], playlist)
+    return list(map(lambda x: x[key], playlist))
 
 """ given a list of songs, finds the number of unique songs.
     
