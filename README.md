@@ -49,7 +49,7 @@ To install requirements, run
 pip install -r requirements.txt
 
 Then, from the app folder, run
-python app.py
+python3 app.py
 
 For local use, the production variable in app.py needs to be set to False. The service will run
 on port 8888
