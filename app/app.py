@@ -110,7 +110,7 @@ def options():
 def songsSelected():
     user = '1'
     sp = getSpotifyClient(user)
-    message = getLoadingMessage('loadSaved', sp.me()["display_name"], user)
+    message = getLoadingMessage('loadSaved', user, sp)
 
     return render_template("loading.html", message=message, user=user,
                                 url="/getSongs/saved")
@@ -120,7 +120,7 @@ def loadingPlaylists():
     user = request.args.get("user")
     sp = getSpotifyClient(user)
 
-    message = getLoadingMessage('loadPlaylists', sp.me()["display_name"], user)
+    message = getLoadingMessage('loadPlaylists', user, sp)
 
     return render_template("loading.html", message=message,
                                 user=user, url="/playlists")
@@ -130,7 +130,7 @@ def playlists():
     user = request.args.get("user")
     sp = getSpotifyClient(user)
 
-    message = getLoadingMessage('loadPlaylists', sp.me()["display_name"], user)
+    message = getLoadingMessage('loadPlaylists', user, sp)
 
     def get_playlists():
 
@@ -161,8 +161,7 @@ def select():
     url = "/getSongs/playlists"
 
     sp = getSpotifyClient(user)
-    name = sp.me()["display_name"]
-    message = getLoadingMessage('loadFromSources', sp.me()["display_name"], user)
+    message = getLoadingMessage('loadFromSources', user, sp)
 
     song_sources_dict = STATE.getSongSourcesDict()
     playlists = song_sources_dict[int(user)]
@@ -174,6 +173,9 @@ def select():
 
         return render_template("loading.html", message=message, user=user,
                                 url=url)
+
+    user_info = sp.me()
+    name = user_info["display_name"] if user_info["display_name"] else "User " + user_info["id"]
 
     source_choices = list(map(lambda x : (x.id, x.name), playlists))
     source_choices = [("saved", "Your Saved Songs")] + source_choices
@@ -214,10 +216,10 @@ def getSongs(source):
 
     # If playlist source was not selected, the only song source is the saved tracks
     if not source == "playlists":
-        message = getLoadingMessage('loadSaved', sp.me()["display_name"], user)
+        message = getLoadingMessage('loadSaved', user, sp)
         song_sources = ['saved']
     else:
-        message = getLoadingMessage('loadFromSources', sp.me()["display_name"], user)
+        message = getLoadingMessage('loadFromSources', user, sp)
         song_sources_dict = STATE.getSongSourcesDict()
         song_sources = song_sources_dict[int(user)]
 
@@ -263,19 +265,18 @@ def getSongsRedirect(source):
     if user == '1':
         if STATE.inMatchMode():
             url = '/loadingPlaylists'
-            name = ''
+            sp = None
         else:
             sp = getSpotifyClient(second_user)
-            name = sp.me()["display_name"]
             ''' loading message is different for playlist and saved songs since this
             funtion is used before the main loading of objects when doing saved
             songs but after the long step when using playlists. '''
 
         if not source == "playlists":
-            message = getLoadingMessage('loadSaved', name, second_user)
+            message = getLoadingMessage('loadSaved', second_user, sp)
             url = '/getSongs/saved'
         else:
-            message = getLoadingMessage('loadPlaylists', name, second_user)
+            message = getLoadingMessage('loadPlaylists', second_user, sp)
             url = '/loadingPlaylists'
     else:
         message = "Comparing Songs..."
@@ -414,14 +415,16 @@ def getSpotifyClient(user):
     sp = spotipy.Spotify(auth=access_token)
     return sp
 
-def getLoadingMessage(key, name, user):
+def getLoadingMessage(key, user, sp=None):
     if STATE.inMatchMode():
         if user == '1':
             name_string = 'Your'
         else:
             return "Loading My Songs..."
-    elif not name is None:
-        name_string = 'User ' + name + "'s"
+    elif sp:
+        user_info = sp.me()
+        name_string = user_info["display_name"] if user_info["display_name"] else "User " + user_info["id"]
+        name_string += "'s"
     else:
         name_string = name
 
