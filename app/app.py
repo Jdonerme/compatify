@@ -401,7 +401,10 @@ def handle_error(e):
         message = "HTTP timeout error. Please check your network connection and \
                   try again."
     else:
-        message = str(type(e)) + ":\t" + e.message.decode('utf-8').strip()
+        exception_message = str(type(e)) + "\t-\t" + e.message.decode('utf-8').strip()
+        message = "Something went wrong: " + exception_message
+        logging.exception(exception_message)
+
     if message:
         log.error(message)
     return render_template("error.html", message=message)
