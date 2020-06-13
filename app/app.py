@@ -68,7 +68,7 @@ def callback1():
         session["TOKEN1"] = token
         if STATE.inMatchMode():
             # get an auth token for my account
-            session["TOKEN2"] = 'todo'
+            session["TOKEN2"] = token
             return redirect(url_for('options'))
 
         auth_url2 = STATE.getOAuthObjects(2).get_authorize_url()
