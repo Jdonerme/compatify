@@ -412,11 +412,14 @@ def getSpotifyClient(user):
 
 def getLoadingMessage(key, name, user):
     if STATE.inMatchMode():
-        name_string = "My"
-    if not name is None:
+        if user == '1':
+            name_string = 'Your'
+        else:
+            name_string = "My"
+    elif not name is None:
         name_string = 'User ' + name + "'s"
     else:
-        name_string = ''
+        name_string = name
 
     if key == 'loadSaved':
         message = u"Loading %s Saved Songs..." %  name_string
