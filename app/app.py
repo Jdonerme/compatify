@@ -46,10 +46,16 @@ def suppress_stdout():
 
 @app.route('/')
 @app.route('/index')
-def index():       
+@app.route('/<view>')
+@app.route('/index/<view>')
+def index(view=''):
     sp_oauth1 = STATE.getOAuthObjects(1)
     auth_url1 = sp_oauth1.get_authorize_url()
-    return render_template("first.html", auth_url=auth_url1)
+    message = "How compatible are your music tastes?"
+    if view and view.lower() == 'match':
+        message = "How compatible are our music tastes?"
+        STATE.enableMatchMode()
+    return render_template("first.html", auth_url=auth_url1, message=message)
 
 
 @app.route('/callback1')
@@ -60,6 +66,10 @@ def callback1():
     if code and state == STATE.getOAuthKeys(1):
         token = STATE.getOAuthObjects(1).get_access_token(code)
         session["TOKEN1"] = token
+        if STATE.inMatchMode():
+            # get an auth token for my account
+            session["TOKEN2"] = 'todo'
+            return redirect(url_for('options'))
 
         auth_url2 = STATE.getOAuthObjects(2).get_authorize_url()
         return render_template("second.html", auth_url=auth_url2)
@@ -86,8 +96,13 @@ def callback2():
 @app.route('/options')
 def options():
     log.info ("--------------------------------------")
-    sp1, sp2 = getSpotifyClient(1), getSpotifyClient(2)
-    message = u"Compatify attempt for users %s and %s" % (sp1.me()["display_name"], sp2.me()["display_name"])
+    sp1 = getSpotifyClient(1)
+    if not STATE.inMatchMode():
+        sp2 = getSpotifyClient(2)
+        message = u"Compatify attempt for users %s and %s" % (sp1.me()["display_name"], sp2.me()["display_name"])
+    else:
+        message = u"Compatify match from user %s!" % sp1.me()["display_name"]
+
     log.info (message)
     return render_template("options.html")
 
@@ -183,16 +198,18 @@ def select():
 @app.route('/getSongs/<source>')
 def getSongs(source):
     user = request.args.get("user")
-    sp = getSpotifyClient(user)
 
     # Set how the app should direct after loading all songs
     template = 'loading.html'
 
-    if not source == "playlists":
-        message = getLoadingMessage('loadSaved', sp.me()["display_name"], user)
-
+    if STATE.inMatchMode and user == '2':
+        message = getLoadingMessage('loadSaved', '', user)
     else:
-        message = getLoadingMessage('loadFromSources', sp.me()["display_name"], user)
+        sp = getSpotifyClient(user)
+        if not source == "playlists":
+            message = getLoadingMessage('loadSaved', sp.me()["display_name"], user)
+        else:
+            message = getLoadingMessage('loadFromSources', sp.me()["display_name"], user)
 
     context = {'user': user, 'message': message,
                'url': '/getSongsRedirect/' + source}
@@ -241,18 +258,21 @@ def getSongsRedirect(source):
     user = request.args.get("user")
     second_user = '2'
     if user == '1':
-
-        sp = getSpotifyClient(second_user)
-        ''' loading message is different for playlist and saved songs since this
-        funtion is used before the smain loading of objects when doing saved
-        songs but after the long step when using playlists. '''
-
-        if not source == "playlists":
-            message = getLoadingMessage('loadSaved', sp.me()["display_name"], second_user)
+        if STATE.inMatchMode():
+            message = getLoadingMessage('loadSaved', '', second_user)
             url = '/getSongs/saved'
         else:
-            message = getLoadingMessage('loadPlaylists', sp.me()["display_name"], second_user)
-            url = '/loadingPlaylists'
+            sp = getSpotifyClient(second_user)
+            ''' loading message is different for playlist and saved songs since this
+            funtion is used before the main loading of objects when doing saved
+            songs but after the long step when using playlists. '''
+
+            if not source == "playlists":
+                message = getLoadingMessage('loadSaved', sp.me()["display_name"], second_user)
+                url = '/getSongs/saved'
+            else:
+                message = getLoadingMessage('loadPlaylists', sp.me()["display_name"], second_user)
+                url = '/loadingPlaylists'
     else:
         message = "Comparing Songs..."
         url = url_for('comparison')
@@ -391,23 +411,25 @@ def getSpotifyClient(user):
     return sp
 
 def getLoadingMessage(key, name, user):
+    if STATE.inMatchMode():
+        name_string = "My"
     if not name is None:
-        name_string = ' User ' + name + "'s"
+        name_string = 'User ' + name + "'s"
     else:
         name_string = ''
 
     if key == 'loadSaved':
-        message = u"Loading%s Saved Songs..." %  name_string
+        message = u"Loading %s Saved Songs..." %  name_string
         if str(user) != '1':
             message = 'Now ' + message
 
     elif key == 'loadPlaylists':
-        message = u"Loading%s Playlist Options..." % name_string
+        message = u"Loading %s Playlist Options..." % name_string
         if str(user) != '1':
             message = 'Now ' + message
 
     elif key == 'loadFromSources':
-        message = u"Loading%s Songs From the Chosen Sources..." % name_string
+        message = u"Loading %s Songs From the Chosen Sources..." % name_string
     else:
         message = 'Loading...'
 
