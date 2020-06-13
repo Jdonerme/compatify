@@ -44,7 +44,7 @@ def create_playlist_obj_from_dict(sp, playlist):
 
     """
 class Playlist(object):
-    required_fields = "items(is_local,track(uri,name,artists(name),album(name),duration_ms)),next"
+    required_song_fields = "items(is_local,track(uri,name,artists(name),album(name),duration_ms)),next"
     def __init__(self, sp, uri, name, user, playlist_id):
         self.sp = sp
         self.uri = uri
@@ -57,7 +57,7 @@ class Playlist(object):
     def tracks(self):
         song_objects = []
         results = self.sp.playlist_tracks(self.id,
-                        fields=Playlist.required_fields)
+                        fields=Playlist.required_song_fields)
 
         for item in results["items"]:
             track = item['track']
