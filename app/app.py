@@ -13,22 +13,21 @@ from requests import ConnectionError , Timeout
 from werkzeug.exceptions import HTTPException
 import time
 import logging
+from console_log import ConsoleLog
 
 app = Flask(__name__)
 app.secret_key = algs.generateRandomString(16)
 
 # GLOBAL VARIABLES
+# log to backend server logs
 log = logging.getLogger('my-logger')
+
+# log to browser console log
+console = logging.getLogger('console')
 
 PORT_NUMBER = int(os.environ.get('PORT', 8888))
 
 STATE = State(production = False)
-
-if STATE.inProductionMode():
-    # Set flask logs to "warning level only in production builds"
-    flaskLog = logging.getLogger('werkzeug')
-    flaskLog.setLevel(logging.WARNING)
-    app.logger.setLevel(logging.WARNING)
 
 # list of the tracks and playlists for each user where the key is the integer user id
 
@@ -47,6 +46,7 @@ def suppress_stdout():
 @app.route('/')
 @app.route('/index')
 def index():       
+    log.warning('test')
     sp_oauth1 = STATE.getOAuthObjects(1)
     auth_url1 = sp_oauth1.get_authorize_url()
     return render_template("first.html", auth_url=auth_url1)
@@ -287,6 +287,7 @@ def comparison():
 
         # filter out local tracks before making the shared playlist since they
         # cannot be included by spotify api.
+        intersection_songs = map(logMatchedLocalTrack, intersection_songs)
         intersection_songs = list(filter(lambda song: not song.local, intersection_songs))
 
         intersection_playlist_uris = algs.getInformation(intersection_songs, 'uri')
@@ -413,6 +414,11 @@ def getLoadingMessage(key, name, user):
 
     return message
 
+def logMatchedLocalTrack(song):
+    if song.local:
+        message = "local track %s by %s could not be included" % song.match_name, song.artist
+        log.warning(message)
+        console.warning(message)
 
 """ Either get all of a user's saved tracks or saved playlists.
 
@@ -466,6 +472,15 @@ def getAllUserObjects(sp, userObject, starting_offset=0, timeout=None):
     return objects, completed
 
 if __name__ == '__main__':
+    if STATE.inProductionMode():
+        # Set flask logs to "warning level only in production builds"
+        flaskLog = logging.getLogger('werkzeug')
+        flaskLog.setLevel(logging.WARNING)
+        app.logger.setLevel(logging.WARNING)
+
     log.addHandler(default_handler)
     log.setLevel(logging.INFO)
+
+    console.setLevel(logging.WARNING)
+    app.wsgi_app = ConsoleLog(app.wsgi_app, console)
     app.run(host='0.0.0.0', port=PORT_NUMBER, debug=(not STATE.inProductionMode()))

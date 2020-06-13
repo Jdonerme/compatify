@@ -9,3 +9,4 @@ Werkzeug==0.16.0
 wheel==0.24.0
 yolk==0.4.3
 Flask-WTF==0.13
+console-log
