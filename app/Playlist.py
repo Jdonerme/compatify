@@ -22,9 +22,9 @@ def lazy_property(fn):
 
     """
 
-def create_playlist_obj_from_dict(sp, playlist):
+def create_playlist_obj_from_dict(sp, playlist, privacyLevel='private'):
     user = sp.me()["id"]
-    return Playlist(sp, playlist["uri"], playlist["name"], user, playlist["id"])
+    return Playlist(sp, playlist["uri"], playlist["name"], user, playlist["id"], privacyLevel)
 
 
 """ A object to hold necessary song fields.
@@ -44,19 +44,25 @@ def create_playlist_obj_from_dict(sp, playlist):
 
     """
 class Playlist(object):
-    def __init__(self, sp, uri, name, user, playlist_id):
+    required_fields="items(is_local,track(uri,name,artists(name),album(name),duration_ms)),next"
+    def __init__(self, sp, uri, name, user, playlist_id, privacyLevel='private'):
         self.sp = sp
         self.uri = uri
         self.name = name
         self.user = user
         self.username = sp.me()["display_name"]
         self.id = playlist_id
+        self.privacyLevel = privacyLevel
 
     @lazy_property
     def tracks(self):
         song_objects = []
-        results = self.sp.user_playlist_tracks(self.username, self.id,
-                                   fields="items(is_local,track(uri,name,artists(name),album(name),duration_ms)),next")
+        if self.privacyLevel == 'private':
+            results = self.sp.user_playlist_tracks(self.username, self.id,
+                            fields=required_fields)
+        else:
+            results = self.sp.playlist_tracks(self.id,
+                            fields=required_fields)
 
         for item in results["items"]:
             track = item['track']

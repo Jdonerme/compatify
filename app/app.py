@@ -21,6 +21,11 @@ app.secret_key = algs.generateRandomString(16)
 log = logging.getLogger('my-logger')
 
 PORT_NUMBER = int(os.environ.get('PORT', 8888))
+# general
+# MATCH_PLAYLIST_ID = '10eJ5YNR0xdDUUgZkx48MP'
+
+# c-go-to
+MATCH_PLAYLIST_ID='2CDvmrW3OY4AC3KSKwrz7m'
 
 STATE = State(production = False)
 
@@ -201,25 +206,24 @@ def getSongs(source):
 
     # Set how the app should direct after loading all songs
     template = 'loading.html'
+    sp = getSpotifyClient(user)
 
     if STATE.inMatchMode and user == '2':
         message = getLoadingMessage('loadSaved', '', user)
+        song_sources_dict[int(user)] = getPublicPlaylist(sp, MATCH_PLAYLIST_ID)
+        song_sources = song_sources_dict[int(user)]
     else:
-        sp = getSpotifyClient(user)
+        # If playlist source was not selected, the only song source is the saved tracks
         if not source == "playlists":
             message = getLoadingMessage('loadSaved', sp.me()["display_name"], user)
+            song_sources = ['saved']
         else:
             message = getLoadingMessage('loadFromSources', sp.me()["display_name"], user)
+            song_sources_dict = STATE.getSongSourcesDict()
+            song_sources = song_sources_dict[int(user)]
 
     context = {'user': user, 'message': message,
                'url': '/getSongsRedirect/' + source}
-
-    # If playlist user was not selected, the only song source is the saved tracks
-    if not source == "playlists":
-        song_sources = ['saved']
-    else:
-        song_sources_dict = STATE.getSongSourcesDict()
-        song_sources = song_sources_dict[int(user)]
 
     def get_songs(user, song_sources):
         sp = getSpotifyClient(user)
@@ -260,7 +264,7 @@ def getSongsRedirect(source):
     if user == '1':
         if STATE.inMatchMode():
             message = getLoadingMessage('loadSaved', '', second_user)
-            url = '/getSongs/saved'
+            url = '/getSongs/playlists'
         else:
             sp = getSpotifyClient(second_user)
             ''' loading message is different for playlist and saved songs since this
@@ -438,6 +442,14 @@ def getLoadingMessage(key, name, user):
 
     return message
 
+""" Load a public spotify playlist as a Playlist object using its id
+
+    returns:
+        playlist: an instance of the Playlist class containing the playlist
+    """
+def getPublicPlaylist(sp, playlist_id):
+    rawPlaylist = sp.playlist(playlist_id, fields=Playlist.required_fields)
+    return create_playlist_obj_from_dict(sp, rawPlaylist, privacyLevel="public")
 
 """ Either get all of a user's saved tracks or saved playlists.
 
