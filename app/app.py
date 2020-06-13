@@ -122,9 +122,6 @@ def loadingPlaylists():
 
     message = getLoadingMessage('loadPlaylists', sp.me()["display_name"], user)
 
-    if STATE.inMatchMode() and user == '2':
-        message = getLoadingMessage('loadSaved', '', user)
-
     return render_template("loading.html", message=message,
                                 user=user, url="/playlists")
 
@@ -134,8 +131,6 @@ def playlists():
     sp = getSpotifyClient(user)
 
     message = getLoadingMessage('loadPlaylists', sp.me()["display_name"], user)
-    if STATE.inMatchMode() and user == '2':
-        message = getLoadingMessage('loadSaved', '', user)
 
     def get_playlists():
 
@@ -176,7 +171,7 @@ def select():
     if STATE.inMatchMode() and user == '2':
         selected_objects = playlists[:1]
         song_sources_dict[int(user)] = selected_objects
-        message = getLoadingMessage('loadSaved', '', user)
+
         return render_template("loading.html", message=message, user=user,
                                 url=url)
 
@@ -226,9 +221,6 @@ def getSongs(source):
         song_sources_dict = STATE.getSongSourcesDict()
         song_sources = song_sources_dict[int(user)]
 
-    if STATE.inMatchMode() and user == '2':
-        message = getLoadingMessage('loadSaved', '', user)
-
     context = {'user': user, 'message': message,
                'url':  '/getSongsRedirect/' + source}
 
@@ -270,20 +262,21 @@ def getSongsRedirect(source):
     second_user = '2'
     if user == '1':
         if STATE.inMatchMode():
-            message = getLoadingMessage('loadSaved', '', second_user)
             url = '/loadingPlaylists'
+            name = ''
         else:
             sp = getSpotifyClient(second_user)
+            name = sp.me()["display_name"]
             ''' loading message is different for playlist and saved songs since this
             funtion is used before the main loading of objects when doing saved
             songs but after the long step when using playlists. '''
 
-            if not source == "playlists":
-                message = getLoadingMessage('loadSaved', sp.me()["display_name"], second_user)
-                url = '/getSongs/saved'
-            else:
-                message = getLoadingMessage('loadPlaylists', sp.me()["display_name"], second_user)
-                url = '/loadingPlaylists'
+        if not source == "playlists":
+            message = getLoadingMessage('loadSaved', name, second_user)
+            url = '/getSongs/saved'
+        else:
+            message = getLoadingMessage('loadPlaylists', name, second_user)
+            url = '/loadingPlaylists'
     else:
         message = "Comparing Songs..."
         url = url_for('comparison')
@@ -426,7 +419,7 @@ def getLoadingMessage(key, name, user):
         if user == '1':
             name_string = 'Your'
         else:
-            name_string = "My"
+            return "Loading My Songs..."
     elif not name is None:
         name_string = 'User ' + name + "'s"
     else:
