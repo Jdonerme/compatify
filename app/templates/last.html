@@ -66,8 +66,22 @@
          <br>
          <form><div class="text-center"><a href={{ success_page }} class="btn btn-success compatify_btn"><div class="button_text">Make Playlist of Shared Songs</div> </a></div></form>
         <br>
-        <br>
-        <form><div class="text-center"><a type="button" class="btn btn-success compatify_btn" href="/"><div class="button_text">Go Back to Start</div></a></div></form>
+        {% if match %}
+            <form><div class="text-center"><a type="button" class="btn btn-success compatify_btn" href="/match"><div class="button_text">Match Again</div></a></div></form>
+            <br>
+
+            <form class="match_div">
+                <div>
+                    <p class="caption"></p>
+                    <a type="button" class="btn btn-success match_btn" href="/">
+                        <div class="button_text"> Compare with a friend instead</div>
+                    </a>
+                </div>
+            </form>
+        {% else %}
+            <br>
+            <form><div class="text-center"><a type="button" class="btn btn-success compatify_btn" href="/"><div class="button_text">Go Back to Start</div></a></div></form>
+        {% endif %}
     </body>    
 
 </html>

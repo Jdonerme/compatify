@@ -16,14 +16,26 @@
 
         <div class="container">
 
-        <img id="logo" class="center" src={{ url_for('static', filename='twoheadphones.png') }}>
+            <img id="logo" class="center" src={{ url_for('static', filename='twoheadphones.png') }}>
 
-        <p class="title text-center">Compatify</p>
-        <br>
-        <p class="caption text-center">{{message}}</p>
-        <br>
-        <br>
-        <form><div class="text-center"><a type="button" class="btn btn-success compatify_btn" href={{auth_url}}><div class="caption">LOG IN WITH SPOTIFY</div></a></div></form>
+            <p class="title text-center">Compatify</p>
+            <br>
+            <p class="caption text-center">{{message}}</p>
+            <br>
+            <br>
+            <form><div class="text-center"><a type="button" class="btn btn-success compatify_btn" href={{auth_url}}><div class="caption">LOG IN WITH SPOTIFY</div></a></div></form>
+            <br>
+            <br>
+            {% if match %}
+                <form class="match_div">
+                    <div>
+                        <p class="caption"></p>
+                        <a type="button" class="btn btn-success match_btn" href="/">
+                            <div> Compare with a friend instead</div>
+                        </a>
+                    </div>
+                </form>
+            {% endif %}
         </div>
     </body>
 </html>
