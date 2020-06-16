@@ -17,40 +17,33 @@ def lazy_property(fn):
 """ Create a Playlist Object in a useful format using the raw information
     returned by the Spotify API.
 
-    sp: spotify client object that was used to fetch the playlsit
+    sp: spotify client object that was used to fetch the playlist
+    user_info: dictionary with information on the user that owns the playlist
     playlist (dict): raw [;ay;ost] object returned from spotipy.
 
     """
 
-def create_playlist_obj_from_dict(sp, playlist):
-    user = sp.me()["id"]
-    return Playlist(sp, playlist["uri"], playlist["name"], user, playlist["id"])
+def create_playlist_obj_from_dict(sp, user_info, playlist):
+    return Playlist(sp, playlist["uri"], playlist["name"], user_info, playlist["id"])
 
 
-""" A object to hold necessary song fields.
+""" A object to hold necessary Playlist fields.
 
-    uri: unique string spotify assigns to song  
-    name: title of song
-    artist: primary artist on the song
-    featured_artists: any collaboration artists on the song
-    duration: length of song in ms
-
-    match_name: title of the song with insignificant distinguishing features
-                removed (ex. remastered)
-    identifier: a string that should be the same for all potential different
-                versions of the same song
-
-    artist_set: A set containing all the artists that are credited on the song
+    uri: unique string spotify assigns to Playlist
+    name: title of playlist
+    user: id of user that owns the playlist
+    username: username of user that owns the playlist
+    id: id of the playlist
 
     """
 class Playlist(object):
     required_song_fields = "items(is_local,track(uri,name,artists(name),album(name),duration_ms)),next"
-    def __init__(self, sp, uri, name, user, playlist_id):
+    def __init__(self, sp, uri, name, user_info, playlist_id):
         self.sp = sp
         self.uri = uri
         self.name = name
-        self.user = user
-        self.username = sp.me()["display_name"]
+        self.user = user_info["id"]
+        self.username = user_info["display_name"]
         self.id = playlist_id
 
     @lazy_property

@@ -121,7 +121,7 @@ def options():
 def songsSelected():
     user = '1'
     sp = getSpotifyClient(user)
-    message = getLoadingMessage('loadSaved', user, sp)
+    message = getLoadingMessage('loadSaved', user)
 
     return render_template("loading.html", message=message, user=user,
                                 url="/getSongs/saved")
@@ -131,7 +131,7 @@ def loadingPlaylists():
     user = request.args.get("user")
     sp = getSpotifyClient(user)
 
-    message = getLoadingMessage('loadPlaylists', user, sp)
+    message = getLoadingMessage('loadPlaylists', user)
 
     return render_template("loading.html", message=message,
                                 user=user, url="/playlists")
@@ -141,7 +141,7 @@ def playlists():
     user = request.args.get("user")
     sp = getSpotifyClient(user)
 
-    message = getLoadingMessage('loadPlaylists', user, sp)
+    message = getLoadingMessage('loadPlaylists', user)
 
     def get_playlists():
 
@@ -151,7 +151,7 @@ def playlists():
         yield render_template(template, **context)
         while True:
 
-            playlists, completed = getAllUserObjects(sp, "playlists",
+            playlists, completed = getAllUserObjects(sp, "playlists", user,
                                         starting_offset=len(complete_playlist_list),
                                         timeout=15)
             complete_playlist_list += playlists
@@ -171,13 +171,12 @@ def select():
     user = request.args.get("user")
     url = "/getSongs/playlists"
 
-    sp = getSpotifyClient(user)
-    message = getLoadingMessage('loadFromSources', user, sp)
+    message = getLoadingMessage('loadFromSources', user)
 
     song_sources_dict = STATE.getSongSourcesDict()
     playlists = song_sources_dict[int(user)]
 
-    user_info = sp.me()
+    user_info = STATE.getUserInfoObjects(user)
     name = user_info["display_name"] if user_info["display_name"] else "User " + user_info["id"]
 
     source_choices = list(map(lambda x : (x.id, x.name), playlists))
@@ -222,14 +221,14 @@ def getSongs(source):
         song_sources_dict = STATE.getSongSourcesDict()
         song_sources_dict[int(user)] = [getPublicPlaylist(sp, MATCH_PLAYLIST_ID)]
         song_sources = song_sources_dict[int(user)]
-        message = getLoadingMessage('loadSaved', user, sp)
+        message = getLoadingMessage('loadSaved', user)
     else:
         # If playlist source was not selected, the only song source is the saved tracks
         if not source == "playlists":
-            message = getLoadingMessage('loadSaved', user, sp)
+            message = getLoadingMessage('loadSaved', user)
             song_sources = ['saved']
         else:
-            message = getLoadingMessage('loadFromSources', user, sp)
+            message = getLoadingMessage('loadFromSources', user)
             song_sources_dict = STATE.getSongSourcesDict()
             song_sources = song_sources_dict[int(user)]
 
@@ -249,7 +248,7 @@ def getSongs(source):
             
             while True:
             
-                songs, completed = getAllUserObjects(sp, "tracks",
+                songs, completed = getAllUserObjects(sp, "tracks", user,
                                         starting_offset=len(complete_song_list),
                                         timeout=10)
                 complete_song_list += songs
@@ -276,7 +275,7 @@ def getSongsRedirect(source):
         if STATE.inMatchMode():
             sp = None
             url = '/getSongs/playlists'
-            message = getLoadingMessage('', second_user, sp)
+            message = getLoadingMessage('', second_user)
         else:
             sp = getSpotifyClient(second_user)
             ''' loading message is different for playlist and saved songs since this
@@ -284,10 +283,10 @@ def getSongsRedirect(source):
             songs but after the long step when using playlists. '''
 
             if not source == "playlists":
-                message = getLoadingMessage('loadSaved', second_user, sp)
+                message = getLoadingMessage('loadSaved', second_user)
                 url = '/getSongs/saved'
             else:
-                message = getLoadingMessage('loadPlaylists', second_user, sp)
+                message = getLoadingMessage('loadPlaylists', second_user)
                 url = '/loadingPlaylists'
     else:
         message = "Comparing Songs..."
@@ -439,18 +438,19 @@ def getSpotifyClient(user):
     sp = spotipy.Spotify(auth=access_token)
     return sp
 
-def getLoadingMessage(key, user, sp=None):
+def getLoadingMessage(key, user):
     if STATE.inMatchMode():
         if user == '1':
             name_string = 'Your'
         else:
             return "Loading My Songs..."
-    elif sp:
-        user_info = sp.me()
-        name_string = user_info["display_name"] if user_info["display_name"] else "User " + user_info["id"]
-        name_string += "'s"
     else:
-        name_string = name
+        user_info = STATE.getUserInfoObjects(user)
+        if user_info:
+            name_string = user_info["display_name"] if user_info["display_name"] else "User " + user_info["id"]
+            name_string += "'s"
+        else:
+            name_string = 'Your'
 
     if key == 'loadSaved':
         message = u"Loading %s Saved Songs..." %  name_string
@@ -476,7 +476,7 @@ def getLoadingMessage(key, user, sp=None):
     """
 def getPublicPlaylist(sp, playlist_id):
     rawPlaylist = sp.playlist(playlist_id)
-    return create_playlist_obj_from_dict(sp, rawPlaylist)
+    return create_playlist_obj_from_dict(sp, STATE.getUserInfoObjects(1), rawPlaylist)
 
 """ Either get all of a user's saved tracks or saved playlists.
 
@@ -486,7 +486,7 @@ def getPublicPlaylist(sp, playlist_id):
             completed is false, the call was terminated early to avoid a timeout.
 
     """
-def getAllUserObjects(sp, userObject, starting_offset=0, timeout=None):
+def getAllUserObjects(sp, userObject, user, starting_offset=0, timeout=None):
     start = time.time()
 
     objects = []
@@ -502,8 +502,8 @@ def getAllUserObjects(sp, userObject, starting_offset=0, timeout=None):
 
             elif userObject == "playlists" :
                 #SPObjects = sp.current_user_playlists(limit=OBJECTS_PER_TIME, offset=offset)
-                user = sp.me()["id"]
-                SPObjects = sp.user_playlists(user, limit=OBJECTS_PER_TIME, offset=offset)
+                user_id = STATE.getUserInfoObjects(user)["id"]
+                SPObjects = sp.user_playlists(user_id, limit=OBJECTS_PER_TIME, offset=offset)
             else:
                 raise TypeError ("getAllUserObjects is expecting to get only either"
                                  " saved_tracks or playlists")
@@ -518,7 +518,7 @@ def getAllUserObjects(sp, userObject, starting_offset=0, timeout=None):
                     track = item["track"]
                     created_item = create_song_obj_from_track_dict(sp, track)
                 else: # userObject == "playlist"
-                    created_item = create_playlist_obj_from_dict(sp, item)
+                    created_item = create_playlist_obj_from_dict(sp, STATE.getUserInfoObjects(user), item)
                 objects.append(created_item)
 
             offset += OBJECTS_PER_TIME

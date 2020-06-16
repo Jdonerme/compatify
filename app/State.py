@@ -64,7 +64,8 @@ class State(object):
     # 0 / default = return both objects as a tuple
     # 1 = return object for user 1
     # 2 = return object for user 2
-    def getUserInfoObjects(self, index = 0):
+    def getUserInfoObjects(self, i = 0):
+        index = int(i)
         if index and index < 3:
             return self._userInfoObjects[index - 1]
         return tuple(self._userInfoObjects)
