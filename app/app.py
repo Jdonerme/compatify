@@ -273,18 +273,19 @@ def getSongsRedirect(source):
         if STATE.inMatchMode():
             sp = None
             url = '/getSongs/playlists'
+            message = getLoadingMessage('', second_user, sp)
         else:
             sp = getSpotifyClient(second_user)
             ''' loading message is different for playlist and saved songs since this
-            funtion is used before the main loading of objects when doing saved
+            function is used before the main loading of objects when doing saved
             songs but after the long step when using playlists. '''
 
-        if not source == "playlists":
-            message = getLoadingMessage('loadSaved', second_user, sp)
-            url = '/getSongs/saved'
-        else:
-            message = getLoadingMessage('loadPlaylists', second_user, sp)
-            url = '/loadingPlaylists'
+            if not source == "playlists":
+                message = getLoadingMessage('loadSaved', second_user, sp)
+                url = '/getSongs/saved'
+            else:
+                message = getLoadingMessage('loadPlaylists', second_user, sp)
+                url = '/loadingPlaylists'
     else:
         message = "Comparing Songs..."
         url = url_for('comparison')
