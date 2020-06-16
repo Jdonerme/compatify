@@ -62,7 +62,8 @@ def index(view=''):
     if view and view.lower() == 'match':
         message = "How compatible are our music tastes?"
         STATE.enableMatchMode()
-    return render_template("first.html", auth_url=auth_url1, message=message)
+    return render_template("first.html", auth_url=auth_url1,
+                            message=message, match=STATE.inMatchMode())
 
 
 @app.route('/callback1')
@@ -328,7 +329,8 @@ def comparison():
 
     return render_template("last.html", score=int(score),
                             count=intersection_size, artists=top5artists,
-                            success_page=url_for('success'))
+                            success_page=url_for('success'),
+                            match=STATE.inMatchMode())
 
 
 @app.route('/success')
@@ -388,7 +390,7 @@ def success():
         warning = ''
     message = u"Playlist Made for users %s and %s" % (user_name1, user_name2)
     log.info(message)
-    return render_template("success.html", warning=warning)
+    return render_template("success.html", warning=warning, match=STATE.inMatchMode())
 
 @app.errorhandler(Exception)
 def handle_error(e):
@@ -416,7 +418,7 @@ def handle_error(e):
 
     if message:
         log.error(message)
-    return render_template("error.html", message=message)
+    return render_template("error.html", message=message, match=STATE.inMatchMode())
 
 
 # Methods
