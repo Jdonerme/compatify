@@ -130,15 +130,6 @@ class SpotifyClientCredentials(SpotifyAuthBase):
                 as a token_info dictionary, otherwise it will be returned
                 as a string.
         """
-        if as_dict:
-            warnings.warn(
-                "You're using 'as_dict = True'."
-                "get_access_token will return the token string directly in future "
-                "versions. Please adjust your code accordingly, or use "
-                "get_cached_token instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
 
         if self.token_info and not self.is_token_expired(self.token_info):
             return self.token_info if as_dict else self.token_info["access_token"]
@@ -392,15 +383,6 @@ class SpotifyOAuth(SpotifyAuthBase):
                             as a token_info dictionary, otherwise it will be returned
                             as a string.
         """
-        if as_dict:
-            warnings.warn(
-                "You're using 'as_dict = True'."
-                "get_access_token will return the token string directly in future "
-                "versions. Please adjust your code accordingly, or use "
-                "get_cached_token instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
         if check_cache:
             token_info = self.get_cached_token()
             if token_info is not None:
