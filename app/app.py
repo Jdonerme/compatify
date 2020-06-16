@@ -22,12 +22,12 @@ log = logging.getLogger('my-logger')
 
 PORT_NUMBER = int(os.environ.get('PORT', 8888))
 # general
-# MATCH_PLAYLIST_ID = '10eJ5YNR0xdDUUgZkx48MP'
+MATCH_PLAYLIST_ID = '10eJ5YNR0xdDUUgZkx48MP'
 
 # c-go-to
-MATCH_PLAYLIST_ID='2CDvmrW3OY4AC3KSKwrz7m'
+# MATCH_PLAYLIST_ID='2CDvmrW3OY4AC3KSKwrz7m'
 
-STATE = State(production = False)
+STATE = State(production = True)
 
 if STATE.inProductionMode():
     # Set flask logs to "warning level only in production builds"
