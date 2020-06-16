@@ -27,9 +27,10 @@ MATCH_PLAYLIST_ID = '10eJ5YNR0xdDUUgZkx48MP'
 # c-go-to
 # MATCH_PLAYLIST_ID='2CDvmrW3OY4AC3KSKwrz7m'
 
-STATE = State(production = True)
+STATES = {}
+PRODUCTION = True
 
-if STATE.inProductionMode():
+if PRODUCTION:
     # Set flask logs to "warning level only in production builds"
     flaskLog = logging.getLogger('werkzeug')
     flaskLog.setLevel(logging.WARNING)
@@ -54,6 +55,15 @@ def suppress_stdout():
 @app.route('/<view>')
 @app.route('/index/<view>')
 def index(view=''):
+    if "session_id" in session:
+        session_id = session["session_id"]
+        STATE = STATES[session_id]
+    else:
+        session_id = algs.generateRandomString(16)
+        session["session_id"] = session_id
+        STATE = State(production = PRODUCTION)
+        STATES[session_id] = STATE
+
     if (view != "favicon.ico" and STATE.isDirty()):
         STATE.clean()
     sp_oauth1 = STATE.getOAuthObjects(1)
@@ -70,6 +80,9 @@ def index(view=''):
 def callback1():
     code = request.args.get('code')
     state = request.args.get('state')
+
+    session_id = session["session_id"]
+    STATE = STATES[session_id]
 
     if code and state == STATE.getOAuthKeys(1):
         token = STATE.getOAuthObjects(1).get_access_token(code)
@@ -89,6 +102,8 @@ def callback1():
 def callback2():
     code = request.args.get('code')
     state = request.args.get('state')
+    session_id = session["session_id"]
+    STATE = STATES[session_id]
 
     if code and state == STATE.getOAuthKeys(2):
         token = STATE.getOAuthObjects(2).get_access_token(code)
@@ -103,6 +118,9 @@ def callback2():
 
 @app.route('/options')
 def options():
+    session_id = session["session_id"]
+    STATE = STATES[session_id]
+
     log.info ("--------------------------------------")
     sp1 = getSpotifyClient(1)
     STATE.saveUserInfo(1, sp1.me())
@@ -140,6 +158,8 @@ def loadingPlaylists():
 def playlists():
     user = request.args.get("user")
     sp = getSpotifyClient(user)
+    session_id = session["session_id"]
+    STATE = STATES[session_id]
 
     message = getLoadingMessage('loadPlaylists', user)
 
@@ -167,6 +187,9 @@ def playlists():
 
 @app.route('/select', methods = ['GET', 'POST'])
 def select():
+    session_id = session["session_id"]
+    STATE = STATES[session_id]
+
     MAX_SONGS_TO_DISPLAY = 15
     user = request.args.get("user")
     url = "/getSongs/playlists"
@@ -210,6 +233,9 @@ def select():
 
 @app.route('/getSongs/<source>')
 def getSongs(source):
+    session_id = session["session_id"]
+    STATE = STATES[session_id]
+
     user = request.args.get("user")
 
     # Set how the app should direct after loading all songs
@@ -269,6 +295,9 @@ def getSongs(source):
 
 @app.route('/getSongsRedirect/<source>')
 def getSongsRedirect(source):
+    session_id = session["session_id"]
+    STATE = STATES[session_id]
+
     user = request.args.get("user")
     second_user = '2'
     if user == '1':
@@ -297,6 +326,9 @@ def getSongsRedirect(source):
 
 @app.route('/comparison')
 def comparison():
+    session_id = session["session_id"]
+    STATE = STATES[session_id]
+
     tracks_dict = STATE.getTracksDict()
     tracks1 = tracks_dict[1]
     tracks2 = tracks_dict[2]
@@ -341,6 +373,9 @@ def comparison():
 
 @app.route('/success')
 def success():
+    session_id = session["session_id"]
+    STATE = STATES[session_id]
+
     token1 = session["TOKEN1"]
     token2 = session["TOKEN2"]
     access_token1 = token1["access_token"]
@@ -351,6 +386,8 @@ def success():
     intersection_names = intersection_playlist["names"]
 
     session.clear()
+    STATES.pop(session_id)
+
 
     sp1 = spotipy.Spotify(auth=access_token1)
     sp2 = spotipy.Spotify(auth=access_token2)
@@ -403,6 +440,9 @@ def success():
 
 @app.errorhandler(Exception)
 def handle_error(e):
+    session_id = session["session_id"]
+    STATE = STATES[session_id]
+
     code = 500
     message = ''
     if isinstance(e, HTTPException):
@@ -439,6 +479,9 @@ def getSpotifyClient(user):
     return sp
 
 def getLoadingMessage(key, user):
+    session_id = session["session_id"]
+    STATE = STATES[session_id]
+
     if STATE.inMatchMode():
         if user == '1':
             name_string = 'Your'
@@ -475,6 +518,9 @@ def getLoadingMessage(key, user):
         playlist: an instance of the Playlist class containing the playlist
     """
 def getPublicPlaylist(sp, playlist_id):
+    session_id = session["session_id"]
+    STATE = STATES[session_id]
+
     rawPlaylist = sp.playlist(playlist_id)
     return create_playlist_obj_from_dict(sp, STATE.getUserInfoObjects(1), rawPlaylist)
 
@@ -487,6 +533,9 @@ def getPublicPlaylist(sp, playlist_id):
 
     """
 def getAllUserObjects(sp, userObject, user, starting_offset=0, timeout=None):
+    session_id = session["session_id"]
+    STATE = STATES[session_id]
+
     start = time.time()
 
     objects = []
@@ -532,4 +581,4 @@ def getAllUserObjects(sp, userObject, user, starting_offset=0, timeout=None):
 if __name__ == '__main__':
     log.addHandler(default_handler)
     log.setLevel(logging.INFO)
-    app.run(host='0.0.0.0', port=PORT_NUMBER, debug=(not STATE.inProductionMode()))
+    app.run(host='0.0.0.0', port=PORT_NUMBER, debug=PRODUCTION)
