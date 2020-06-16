@@ -1,7 +1,10 @@
 from algs import generateRandomString
-
+import os
 from spotipy import oauth2
+
 class State(object):
+    CACHE1 = '.spotipyoauthcache1'
+    CACHE2 = '.spotipyoauthcache2'
     def __init__(self, production=True):
         self._OAuthKeys = generateRandomString(16), generateRandomString(16)
         self._production = production
@@ -29,6 +32,10 @@ class State(object):
 
     def clean(self):
         self.__init__(self._production)
+        if os.path.exists(State.CACHE1):
+            os.remove(State.CACHE1)
+        if os.path.exists(State.CACHE2):
+            os.remove(State.CACHE2)
     
     def inProductionMode(self):
         return self._production
@@ -75,8 +82,6 @@ class State(object):
 
     def _createOAuthObjects(self):
         SCOPE = 'user-library-read playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private'
-        CACHE1 = '.spotipyoauthcache1'
-        CACHE2 = '.spotipyoauthcache2'
         SPOTIPY_CLIENT_ID = '883896384d0c4d158bab154c01de29db'
         SPOTIPY_CLIENT_SECRET = '37443ee0c0404c44b755f3ed97c48493'
         if self.inProductionMode():
@@ -86,6 +91,6 @@ class State(object):
             SPOTIPY_REDIRECT_URI1 = 'http://localhost:8888/callback1'
             SPOTIPY_REDIRECT_URI2 = 'http://localhost:8888/callback2'
 
-        sp_oauth1 = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIPY_REDIRECT_URI1,state=self.getOAuthKeys(1),scope=SCOPE,cache_path=CACHE1, show_dialog=True)
-        sp_oauth2 = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIPY_REDIRECT_URI2,state=self.getOAuthKeys(2),scope=SCOPE,cache_path=CACHE2, show_dialog=True)
+        sp_oauth1 = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIPY_REDIRECT_URI1,state=self.getOAuthKeys(1),scope=SCOPE,cache_path=State.CACHE1, show_dialog=True)
+        sp_oauth2 = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIPY_REDIRECT_URI2,state=self.getOAuthKeys(2),scope=SCOPE,cache_path=State.CACHE2, show_dialog=True)
         return sp_oauth1, sp_oauth2
