@@ -320,6 +320,9 @@ def comparison():
 
         # filter out local tracks before making the shared playlist since they
         # cannot be included by spotify api.
+        local_tracks = list(filter(lambda song: song.local, intersection_songs))
+        warning = "Could not add local track: "
+        [log.warning(warning + song.identifier) for song in local_tracks]
         intersection_songs = list(filter(lambda song: not song.local, intersection_songs))
 
         intersection_playlist_uris = algs.getInformation(intersection_songs, 'uri')
