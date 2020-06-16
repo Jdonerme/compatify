@@ -440,8 +440,11 @@ def success():
 
 @app.errorhandler(Exception)
 def handle_error(e):
-    session_id = session["session_id"]
-    STATE = STATES[session_id]
+    match = False
+    if "session_id" in session:
+        session_id = session["session_id"]
+        STATE = STATES[session_id]
+        match = STATE.inMatchMode()
 
     code = 500
     message = ''
@@ -467,7 +470,7 @@ def handle_error(e):
 
     if message:
         log.error(message)
-    return render_template("error.html", message=message, match=STATE.inMatchMode())
+    return render_template("error.html", message=message, match=match)
 
 
 # Methods
