@@ -365,12 +365,15 @@ def success():
 
     playlist_name = 'Compatify ' + user_name1 + ' ' + user_name2
 
-    new_playlist1 = sp1.user_playlist_create(user_id1, playlist_name, public=False)
+    new_playlist1 = sp1.user_playlist_create(user_id1, playlist_name, public=STATE.inMatchMode())
     makeSecondPlaylist = user_id1 != user_id2
     if makeSecondPlaylist:
-        new_playlist2 = sp2.user_playlist_create(user_id2, playlist_name, public=False)
+        new_playlist2 = sp2.user_playlist_create(user_id2, playlist_name, public=STATE.inMatchMode())
 
     size = len(intersection_songs)
+    if (STATE.inMatchMode()):
+        url = new_playlist1['external_urls']['spotify']
+        log.warning("Created Match playlist at: " + url)
 
     index = 0
     while True:
