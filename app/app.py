@@ -150,7 +150,7 @@ def playlists():
 
             playlists, completed = getAllUserObjects(sp, "playlists",
                                         starting_offset=len(complete_playlist_list),
-                                        timeout=3)
+                                        timeout=15)
             complete_playlist_list += playlists
 
             if completed:
