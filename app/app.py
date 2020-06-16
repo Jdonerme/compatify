@@ -105,11 +105,14 @@ def callback2():
 def options():
     log.info ("--------------------------------------")
     sp1 = getSpotifyClient(1)
+    STATE.saveUserInfo(1, sp1.me())
     if not STATE.inMatchMode():
         sp2 = getSpotifyClient(2)
-        message = u"Compatify attempt for users %s and %s" % (sp1.me()["display_name"], sp2.me()["display_name"])
+        STATE.saveUserInfo(2, sp2.me())
+        message = u"Compatify attempt for users %s and %s" % (STATE.getUserInfoObjects(1)["display_name"], STATE.getUserInfoObjects(2)["display_name"])
     else:
-        message = u"Compatify match from user %s!" % sp1.me()["display_name"]
+        message = u"Compatify match from user %s!" % STATE.getUserInfoObjects(1)["display_name"]
+        STATE.saveUserInfo(2, STATE.getUserInfoObjects(1))
 
     log.info (message)
     return render_template("options.html")
@@ -299,7 +302,7 @@ def comparison():
     tracks1 = tracks_dict[1]
     tracks2 = tracks_dict[2]
     sp1, sp2 = getSpotifyClient(1), getSpotifyClient(2)
-    message = u"Compatify success for users %s and %s" % (sp1.me()["display_name"], sp2.me()["display_name"])
+    message = u"Compatify success for users %s and %s" % (STATE.getUserInfoObjects(1)["display_name"], STATE.getUserInfoObjects(2)["display_name"])
 
     log.info(message)
 
@@ -353,7 +356,7 @@ def success():
     sp1 = spotipy.Spotify(auth=access_token1)
     sp2 = spotipy.Spotify(auth=access_token2)
 
-    user1, user2 = sp1.me(), sp2.me()
+    user1, user2 = STATE.getUserInfoObjects(1), STATE.getUserInfoObjects(2)
 
     user_id1, user_id2 = user1["id"], user2["id"]
     user_name1, user_name2 = user1["display_name"], user2["display_name"]

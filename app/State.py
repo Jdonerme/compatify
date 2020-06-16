@@ -17,6 +17,7 @@ class State(object):
 
         self._selected = {}
         self._OAuthObjects = self._createOAuthObjects()
+        self._userInfoObjects = [{}, {}]
 
     def isDirty(self):
         if self.getIntersectionPlaylist() or \
@@ -59,6 +60,17 @@ class State(object):
         if index and index < 3:
             return self._OAuthKeys[index - 1]
         return self._OAuthKeys
+
+    # 0 / default = return both objects as a tuple
+    # 1 = return object for user 1
+    # 2 = return object for user 2
+    def getUserInfoObjects(self, index = 0):
+        if index and index < 3:
+            return self._userInfoObjects[index - 1]
+        return tuple(self._userInfoObjects)
+
+    def saveUserInfo(self, user, info):
+        self._userInfoObjects[int(user) - 1] = info
 
     def _createOAuthObjects(self):
         SCOPE = 'user-library-read playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private'
