@@ -16,6 +16,7 @@ import logging
 
 app = Flask(__name__)
 app.secret_key = algs.generateRandomString(16)
+app.url_map.strict_slashes = False
 
 # GLOBAL VARIABLES
 log = logging.getLogger('my-logger')
