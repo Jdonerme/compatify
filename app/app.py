@@ -600,4 +600,4 @@ def clearOldStates():
 if __name__ == '__main__':
     log.addHandler(default_handler)
     log.setLevel(logging.INFO)
-    app.run(host='0.0.0.0', port=PORT_NUMBER, debug=PRODUCTION)
+    app.run(host='0.0.0.0', port=PORT_NUMBER, debug=not PRODUCTION)
