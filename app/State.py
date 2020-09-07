@@ -1,5 +1,6 @@
 from algs import generateRandomString
 import os
+from DB import DB
 from spotipy import oauth2
 
 class State(object):
@@ -21,12 +22,14 @@ class State(object):
         self._selected = {}
         self._OAuthObjects = self._createOAuthObjects()
         self._userInfoObjects = [{}, {}]
+        self._DB = DB() if production else None
 
     def isDirty(self):
         if self.getIntersectionPlaylist() or \
            self.getTracksDict() or \
            self.getSongSourcesDict() or \
-           self.inMatchMode():
+           self.inMatchMode() or \
+           self._DB:
                 return True
         return False
 
@@ -50,6 +53,9 @@ class State(object):
         return self._tracks_dict
     def getSongSourcesDict(self):
         return self._song_sources_dict
+
+    def getDB(self):
+        return self.DB
 
     # 0 / default = return both objects as a tuple
     # 1 = return object for user 1
