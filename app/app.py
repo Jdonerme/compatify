@@ -23,10 +23,10 @@ log = logging.getLogger('my-logger')
 
 PORT_NUMBER = int(os.environ.get('PORT', 8888))
 # general
-MATCH_PLAYLIST_ID = '10eJ5YNR0xdDUUgZkx48MP'
+# MATCH_PLAYLIST_ID = '10eJ5YNR0xdDUUgZkx48MP'
 
 # c-go-to
-# MATCH_PLAYLIST_ID='2CDvmrW3OY4AC3KSKwrz7m'
+MATCH_PLAYLIST_ID='2CDvmrW3OY4AC3KSKwrz7m'
 
 ''' Store all states that have been created.
 Data is stored as a tuple, with the first element being the state and the second
