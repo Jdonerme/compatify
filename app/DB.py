@@ -7,19 +7,35 @@ class DB(object):
     self.initialze()
 
     def initialze():
-        sql = "CREATE TABLE IF NOT EXISTS CREATE TABLE test;" #... TODO
-        # cur.execute(sql)
+        sql = """CREATE TABLE IF NOT EXISTS notifications (
+                playlist_uri VARCHAR(22),
+                phone_number VARCHAR(15),
+                PRIMARY KEY (phone_number, playlist_uri)
+            );"""
+        self._cur.execute(sql)
 
     def getPhoneNumbersForPlaylist(playlist_uri):
-        # TODO
+        sql = "SELECT * from notifications WHERE playlist_uri = '%s" % id
+        self._cur.execute(sql)
+        rows = cur.fetchall()
+
         numbers = []
+        for row in rows:
+            phone_number = row[1]
+            numbers.append(phone_number)
+        
         return numbers
 
     def registerPhoneNumberToPlaylist(playlist_uri, number):
-        # TODO
+        sql = """INSERT INTO notifications (playlist_uri, phone_number)
+                VALUES ('%s', '%s'); """ % (id, number)
+        self._cur.execute(sql)
+
     
     def unsubscribePhoneNumber(number):
-        #TODO
+        sql = "DELETE FROM notifications WHERE phone_number = '%s';" % number
+        self._cur.execute(sql)
     
     def removePhoneNumberFromPlaylist(playlist_uri, number):
-        # TODO
+        sql = "DELETE FROM notifications WHERE playlist_uri = '%s' AND phone_number = '%s';" % (playlist_uri, number)
+        self._cur.execute(sql)
