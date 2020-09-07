@@ -3,7 +3,7 @@ from flask import (
     Flask, render_template, request, redirect, url_for, session, Response,
     stream_with_context, render_template_string)
 from flask.logging import default_handler
-import spotipy, sys, os, algs
+import spotipy, sys, os, algs, requests
 from contextlib import contextmanager
 from Song import Song, create_song_obj_from_track_dict
 from Playlist import Playlist, create_playlist_obj_from_dict
@@ -418,6 +418,8 @@ def success():
     if (STATE.inMatchMode()):
         url = new_playlist1['external_urls']['spotify']
         log.warning("Created Match playlist at: " + url)
+        if PRODUCTION:
+            sendMatchText(url)
 
     index = 0
     while True:
@@ -597,6 +599,16 @@ def clearOldStates():
 
         if time_diff_days >= 2:
             del STATES[session_id]
+
+def sendMatchText(url):
+    if "MATCH_PHONE_NUM" in os.environ and "TILL_URL" in os.environ:
+        TILL_URL = os.environ.get("TILL_URL")
+        PHONE_NUM = os.environ.get("MATCH_PHONE_NUM")
+        MSG = "New match playlist created from compatify at %s !" % url
+        requests.post(TILL_URL, json={
+            "phone": [PHONE_NUM],
+            "text" : MSG
+        })
 
 if __name__ == '__main__':
     log.addHandler(default_handler)
