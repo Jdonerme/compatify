@@ -39,3 +39,8 @@ class DB(object):
     def removePhoneNumberFromPlaylist(playlist_uri, number):
         sql = "DELETE FROM notifications WHERE playlist_uri = '%s' AND phone_number = '%s';" % (playlist_uri, number)
         self._cur.execute(sql)
+
+    def clear():
+        sql = "DROP TABLE notifications;"
+        self._cur.execute(sql)
+        self.initialze()
