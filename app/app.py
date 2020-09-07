@@ -604,7 +604,7 @@ def sendMatchText(url):
     if "MATCH_PHONE_NUM" in os.environ and "TILL_URL" in os.environ:
         TILL_URL = os.environ.get("TILL_URL")
         PHONE_NUM = os.environ.get("MATCH_PHONE_NUM")
-        MSG = "New match playlist created from compatify at %s!" % url
+        MSG = "New match playlist created from compatify at %s !" % url
         requests.post(TILL_URL, json={
             "phone": [PHONE_NUM],
             "text" : MSG
