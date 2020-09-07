@@ -80,7 +80,6 @@ def index(view=''):
     return render_template("first.html", auth_url=auth_url1,
                             message=message, match=STATE.inMatchMode())
 
-
 @app.route('/callback1')
 def callback1():
     code = request.args.get('code')
