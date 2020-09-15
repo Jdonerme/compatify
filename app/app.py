@@ -406,7 +406,9 @@ def success():
     if user_name2 == None:
         user_name2 = user_id2
 
-    playlist_name = 'Compatify ' + user_name1 + ' ' + user_name2
+    playlist_name = 'Compatify ' + user_name1
+    if (not STATE.inMatchMode()):
+        playlist_name += ' ' + user_name2
 
     new_playlist1 = sp1.user_playlist_create(user_id1, playlist_name, public=STATE.inMatchMode())
     makeSecondPlaylist = user_id1 != user_id2
