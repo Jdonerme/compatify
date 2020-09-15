@@ -340,6 +340,9 @@ def comparison():
     message = u"Compatify success for users %s and %s" % (STATE.getUserInfoObjects(1)["display_name"], STATE.getUserInfoObjects(2)["display_name"])
 
     log.info(message)
+    if (STATE.inMatchMode() and STATE.inProductionMode()):
+        name = STATE.getUserInfoObjects(1)["display_name"]
+        sendMatchText(name)
 
     if tracks1 == [] or tracks2 == []:
         intersection_songs, top5artists = [], []
@@ -419,8 +422,8 @@ def success():
     if (STATE.inMatchMode()):
         url = new_playlist1['external_urls']['spotify']
         log.warning("Created Match playlist at: " + url)
-        if PRODUCTION:
-            sendMatchText(url)
+        if STATE.inProductionMode():
+            sendMatchText(user_name1, url)
 
     index = 0
     while True:
@@ -601,11 +604,14 @@ def clearOldStates():
         if time_diff_days >= 2:
             del STATES[session_id]
 
-def sendMatchText(url):
+def sendMatchText(name, url=None):
     if "MATCH_PHONE_NUM" in os.environ and "TILL_URL" in os.environ:
         TILL_URL = os.environ.get("TILL_URL")
         PHONE_NUM = os.environ.get("MATCH_PHONE_NUM")
-        MSG = "New match playlist created from compatify at %s !" % url
+        if url:
+            MSG = "New Compatify match playlist created by user %s at %s !" % (name, url)
+        else:
+            MSG = "Compatify match completed by user %s" % name
         requests.post(TILL_URL, json={
             "phone": [PHONE_NUM],
             "text" : MSG
