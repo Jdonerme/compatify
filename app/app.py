@@ -342,7 +342,7 @@ def comparison():
     log.info(message)
     if (STATE.inMatchMode() and STATE.inProductionMode()):
         name = STATE.getUserInfoObjects(1)["display_name"]
-        sendMatchText(name)
+        sendMatchNotifications(name)
 
     if tracks1 == [] or tracks2 == []:
         intersection_songs, top5artists = [], []
@@ -423,7 +423,7 @@ def success():
         url = new_playlist1['external_urls']['spotify']
         log.warning("Created Match playlist at: " + url)
         if STATE.inProductionMode():
-            sendMatchText(user_name1, url)
+            sendMatchNotifications(user_name1, url)
 
     index = 0
     while True:
@@ -604,18 +604,39 @@ def clearOldStates():
         if time_diff_days >= 2:
             del STATES[session_id]
 
-def sendMatchText(name, url=None):
+def sendMatchNotifications(name, url=None):
+    if url:
+        MSG = "New Compatify match playlist created by user %s at %s !" % (name, url)
+    else:
+        MSG = "Compatify match completed by user %s" % name
+    sendMatchEmail(MSG)
+    sendMatchText(MSG)
+
+def sendMatchText(MSG):
     if "MATCH_PHONE_NUM" in os.environ and "TILL_URL" in os.environ:
         TILL_URL = os.environ.get("TILL_URL")
         PHONE_NUM = os.environ.get("MATCH_PHONE_NUM")
-        if url:
-            MSG = "New Compatify match playlist created by user %s at %s !" % (name, url)
-        else:
-            MSG = "Compatify match completed by user %s" % name
+
         requests.post(TILL_URL, json={
             "phone": [PHONE_NUM],
             "text" : MSG
         })
+
+def sendMatchEmail(MSG):
+    if "MAILGUN_API_KEY" in os.environ and "MAILGUN_DOMAIN" in os.environ and "MATCH_EMAIL" in os.environ:
+        MAIL_GUN_KEY = os.environ.get("MAILGUN_API_KEY")
+        MAIL_GUN_DOMAIN = os.environ.get("MAILGUN_DOMAIN")
+        MATCH_EMAIL = os.environ.get("MATCH_EMAIL")
+
+        MAIL_GUN_URL = "https://api.mailgun.net/v3/%s/messages" % MAIL_GUN_DOMAIN
+
+        return requests.post(
+            MAIL_GUN_URL,
+            auth=("api", MAIL_GUN_KEY),
+            data={"from": ("Compatify <mailgun@%s>" % MAIL_GUN_DOMAIN),
+                "to": [MATCH_EMAIL],
+                "subject": "New Compatify Match!",
+                "text": MSG})
 
 if __name__ == '__main__':
     log.addHandler(default_handler)
