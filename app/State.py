@@ -43,6 +43,8 @@ class State(object):
         return self._match
     def enableMatchMode(self):
         self._match = True
+    def disableMatchMode(self):
+        self._match = False
 
     def getIntersectionPlaylist(self):
         return self._intersection_playlist
