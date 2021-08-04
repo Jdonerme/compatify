@@ -34,11 +34,11 @@ the date the state was created. '''
 STATES = {}
 PRODUCTION = True if 'PRODUCTION' in os.environ and os.environ['PRODUCTION'].lower() == 'true' else False
 
-if PRODUCTION:
-    # Set flask logs to "warning level only in production builds"
-    flaskLog = logging.getLogger('werkzeug')
-    flaskLog.setLevel(logging.WARNING)
-    app.logger.setLevel(logging.WARNING)
+# if PRODUCTION:
+    # # Set flask logs to "warning level only in production builds"
+    # flaskLog = logging.getLogger('werkzeug')
+    # flaskLog.setLevel(logging.WARNING)
+    # app.logger.setLevel(logging.WARNING)
 
 # list of the tracks and playlists for each user where the key is the integer user id
 
@@ -62,9 +62,11 @@ def index(view=''):
     clearOldStates()
     if "session_id" in session:
         session_id = session["session_id"]
+        log.info ('id in session: ' + session_id)
         STATE = STATES[session_id][0]
     else:
         session_id = algs.generateRandomString(16)
+        log.info ('id not in session: ' + session_id)
         session["session_id"] = session_id
         STATE = State(production = PRODUCTION)
         STATES[session_id] = (STATE, datetime.date.today())
