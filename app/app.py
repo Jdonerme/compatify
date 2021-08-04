@@ -78,8 +78,13 @@ def index(view=''):
     message = "How compatible are your music tastes?"
     if view and view.lower() == 'match':
         message = "How compatible are our music tastes?"
+        log.info ('enable match')
         STATE.enableMatchMode()
     elif (view != "favicon.ico"):
+        log.info ('disable match')
+        if view:
+            log.info ('view?')
+            log.info (view)
         STATE.disableMatchMode()
     return render_template("first.html", auth_url=auth_url1,
                             message=message, match=STATE.inMatchMode())
