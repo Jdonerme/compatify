@@ -108,6 +108,10 @@ def callback1():
         return render_template("second.html", auth_url=auth_url2)
 
     else:
+        log.info('rip')
+        log.info(code)
+        log.info(state)
+        log.info(STATE)
         return redirect(url_for('index'))
 
 @app.route('/callback2')
