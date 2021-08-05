@@ -60,16 +60,15 @@ def suppress_stdout():
 @app.route('/index/<view>')
 def index(view=''):
     clearOldStates()
-    if "session_id" in session:
-        session_id = session["session_id"]
-        log.info ('id in session: ' + session_id)
-        STATE = STATES[session_id][0]
-    else:
-        session_id = algs.generateRandomString(16)
-        log.info ('id not in session: ' + session_id)
-        session["session_id"] = session_id
-        STATE = State(production = PRODUCTION)
-        STATES[session_id] = (STATE, datetime.date.today())
+    # if "session_id" in session:
+    #     session_id = session["session_id"]
+    #     log.info ('id in session: ' + session_id)
+    #     STATE = STATES[session_id][0]
+    # else:
+    session_id = algs.generateRandomString(24)
+    session["session_id"] = session_id
+    STATE = State(production = PRODUCTION)
+    STATES[session_id] = (STATE, datetime.date.today())
 
     if (view != "favicon.ico" and STATE.isDirty()):
         STATE.clean()
