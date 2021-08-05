@@ -112,6 +112,7 @@ def callback1():
         log.info(code)
         log.info(state)
         log.info(STATE)
+        log.info(STATE.getOAuthKeys(1))
         return redirect(url_for('index'))
 
 @app.route('/callback2')
