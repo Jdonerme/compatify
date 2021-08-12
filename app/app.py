@@ -70,7 +70,7 @@ def index(view=''):
         session_id = algs.generateRandomString(24)
         session["session_id"] = session_id
         log.info('setting to: ' + session_id)
-        STATE = State(production = PRODUCTION)
+        STATE = State(session_id, production = PRODUCTION)
         STATES[session_id] = (STATE, datetime.date.today())
 
     if (view != "favicon.ico" and STATE.isDirty()):
@@ -614,6 +614,8 @@ def getAllUserObjects(sp, userObject, user, starting_offset=0, timeout=None):
 def clearOldStates():
     today = datetime.date.today()
     for session_id in STATES:
+        stateObj = STATES[session_id][0]
+        stateObj.clean()
         creation_date = STATES[session_id][1]
         time_diff_days = (today - creation_date).days
 

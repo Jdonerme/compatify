@@ -5,7 +5,7 @@ from spotipy import oauth2
 class State(object):
     CACHE1 = '.spotipyoauthcache1'
     CACHE2 = '.spotipyoauthcache2'
-    def __init__(self, production=True):
+    def __init__(self, session_id, production=True):
         self._OAuthKeys = generateRandomString(16), generateRandomString(16)
         self._production = production
         self._match = False
@@ -22,22 +22,25 @@ class State(object):
         self._OAuthObjects = self._createOAuthObjects()
         self._userInfoObjects = [{}, {}]
 
+        self._cache1 = State.CACHE1 + '_' + session_id
+        self._cache2 = State.CACHE2 + '_' + session_id
+
     def isDirty(self):
         if self.getIntersectionPlaylist() or \
            self.getTracksDict() or \
            self.getSongSourcesDict() or \
            self.inMatchMode() or \
-           os.path.exists(State.CACHE1) or \
-           os.path.exists(State.CACHE2):
+           os.path.exists(self._cache1) or \
+           os.path.exists(self._cache1):
                 return True
         return False
 
     def clean(self):
         self.__init__(self._production)
-        if os.path.exists(State.CACHE1):
-            os.remove(State.CACHE1)
-        if os.path.exists(State.CACHE2):
-            os.remove(State.CACHE2)
+        if os.path.exists(self._cache1):
+            os.remove(self._cache1)
+        if os.path.exists(self._cache2):
+            os.remove(self._cache2)
     
     def inProductionMode(self):
         return self._production
@@ -95,6 +98,6 @@ class State(object):
             SPOTIPY_REDIRECT_URI1 = 'http://localhost:8888/callback1'
             SPOTIPY_REDIRECT_URI2 = 'http://localhost:8888/callback2'
 
-        sp_oauth1 = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIPY_REDIRECT_URI1,state=self.getOAuthKeys(1),scope=SCOPE,cache_path=State.CACHE1, show_dialog=True)
-        sp_oauth2 = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIPY_REDIRECT_URI2,state=self.getOAuthKeys(2),scope=SCOPE,cache_path=State.CACHE2, show_dialog=True)
+        sp_oauth1 = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIPY_REDIRECT_URI1,state=self.getOAuthKeys(1),scope=SCOPE,cache_path=self._cache1, show_dialog=True)
+        sp_oauth2 = oauth2.SpotifyOAuth( SPOTIPY_CLIENT_ID, SPOTIPY_CLIENT_SECRET,SPOTIPY_REDIRECT_URI2,state=self.getOAuthKeys(2),scope=SCOPE,cache_path=self._cache2, show_dialog=True)
         return sp_oauth1, sp_oauth2
