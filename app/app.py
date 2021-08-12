@@ -63,7 +63,7 @@ def index(view=''):
     if "session_id" in session:
         session_id = session["session_id"]
         log.info ('id in session: ' + session_id)
-        log.info(sesion)
+        log.info(session)
         STATE = STATES[session_id][0]
     else:
         log.info('session id not in session')
