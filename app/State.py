@@ -26,7 +26,9 @@ class State(object):
         if self.getIntersectionPlaylist() or \
            self.getTracksDict() or \
            self.getSongSourcesDict() or \
-           self.inMatchMode():
+           self.inMatchMode() or \
+           os.path.exists(State.CACHE1) or \
+           os.path.exists(State.CACHE2):
                 return True
         return False
 
