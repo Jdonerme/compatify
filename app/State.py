@@ -9,6 +9,7 @@ class State(object):
         self._OAuthKeys = generateRandomString(16), generateRandomString(16)
         self._production = production
         self._match = False
+        self._session_id = session_id
 
         # playlist of songs that have been found for both user's librarys
         self._intersection_playlist = {}
@@ -19,11 +20,14 @@ class State(object):
         self._song_sources_dict = {}
 
         self._selected = {}
-        self._OAuthObjects = self._createOAuthObjects()
-        self._userInfoObjects = [{}, {}]
+
 
         self._cache1 = State.CACHE1 + '_' + session_id
         self._cache2 = State.CACHE2 + '_' + session_id
+
+
+        self._OAuthObjects = self._createOAuthObjects()
+        self._userInfoObjects = [{}, {}]
 
     def isDirty(self):
         if self.getIntersectionPlaylist() or \
@@ -36,7 +40,7 @@ class State(object):
         return False
 
     def clean(self):
-        self.__init__(self._production)
+        self.__init__(self._session_id, self._production)
         if os.path.exists(self._cache1):
             os.remove(self._cache1)
         if os.path.exists(self._cache2):
